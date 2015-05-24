@@ -1,0 +1,31 @@
+{
+    "name": "arcanedev/cartify",
+    "description": "A simple shopping cart manager",
+    "keywords": ["cart", "carts", "shopping cart", "shop", "e-commerce", "products", "vat"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "ARCANEDEV",
+            "email": "arcanedev.maroc@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "~2.0",
+        "phpunit/phpcov": "~2.0",
+        "mockery/mockery": "~0.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Arcanedev\\Cartify\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Arcanedev\\Cartify\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable"
+}
