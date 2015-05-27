@@ -123,6 +123,7 @@ class Product implements ProductInterface
     private function load(array $attributes)
     {
         $this->checkRequiredAttributes($attributes);
+        $this->fillOptionalAttributes($attributes);
         $this->setAttributes($attributes);
         $this->generateHashedID();
 
@@ -137,16 +138,12 @@ class Product implements ProductInterface
      */
     private function setAttributes(array $attributes)
     {
-        $this->setId($attributes['id'])
-             ->setName($attributes['name'])
-             ->setQty($attributes['qty'])
-             ->setPrice($attributes['price'])
-             ->setVat(
-                 array_key_exists('vat', $attributes) ? $attributes['vat'] : 0
-             )
-             ->setOptions(
-                 array_key_exists('options', $attributes) ? $attributes['options'] : []
-             );
+        $this->setId($attributes['id']);
+        $this->setName($attributes['name']);
+        $this->setQty($attributes['qty']);
+        $this->setPrice($attributes['price']);
+        $this->setVat($attributes['vat']);
+        $this->setOptions($attributes['options']);
     }
 
     /* ------------------------------------------------------------------------------------------------
@@ -546,5 +543,20 @@ class Product implements ProductInterface
         ksort($options);
 
         $this->propId = md5($this->propId . serialize($options));
+    }
+
+    /**
+     * Fill optional attributes
+     *
+     * @param array $attributes
+     */
+    private function fillOptionalAttributes(array &$attributes)
+    {
+        if ( ! array_key_exists('vat', $attributes)) {
+            $attributes['vat'] = 0;
+        }
+        if ( ! array_key_exists('options', $attributes)) {
+            $attributes['options'] = [];
+        }
     }
 }
