@@ -273,7 +273,7 @@ class Product implements ProductInterface
     /**
      * Get product Value-added tax
      *
-     * @return int
+     * @return double
      */
     public function getVat()
     {
@@ -357,16 +357,16 @@ class Product implements ProductInterface
     /**
      * Create a new product
      *
-     * @param  string    $id
-     * @param  string    $name
-     * @param  int       $qty
+     * @param  string     $id
+     * @param  string     $name
+     * @param  int        $qty
      * @param  int|double $price
      * @param  int|double $vat
-     * @param  array     $options
+     * @param  array      $options
      *
      * @return Product
      */
-    public static function create($id, $name, $qty, $price, $vat = 0, array $options = [])
+    public static function create($id, $name, $qty, $price, $vat = 0.0, array $options = [])
     {
         return new self(compact('id', 'name', 'qty', 'price', 'vat', 'options'));
     }
@@ -391,7 +391,7 @@ class Product implements ProductInterface
     /**
      * Check the id attribute
      *
-     * @param  int|string $id
+     * @param  string $id
      *
      * @throws InvalidProductIDException
      */

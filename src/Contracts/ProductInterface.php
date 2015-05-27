@@ -7,11 +7,11 @@
  * @property string                  id
  * @property string                  name
  * @property int                     qty
- * @property float                   price
- * @property int|float               vat
- * @property float                   total
- * @property float                   vatPrice
- * @property float                   totalPrice
+ * @property double                  price
+ * @property int|double              vat
+ * @property double                  total
+ * @property double                  vatPrice
+ * @property double                  totalPrice
  * @property ProductOptionsInterface options
  */
 interface ProductInterface
@@ -71,14 +71,14 @@ interface ProductInterface
     /**
      * Get product price
      *
-     * @return float
+     * @return double
      */
     public function getPrice();
 
     /**
      * Set product price
      *
-     * @param  float $price
+     * @param  double $price
      *
      * @return self
      */
@@ -102,21 +102,21 @@ interface ProductInterface
 
     /**
      * Get
-     * @return float
+     * @return double
      */
     public function getTotal();
 
     /**
      * Get Vat price
      *
-     * @return float
+     * @return double
      */
     public function getVatPrice();
 
     /**
      * Get total price
      *
-     * @return float
+     * @return double
      */
     public function getTotalPrice();
 
@@ -146,8 +146,8 @@ interface ProductInterface
      * @param  string    $id
      * @param  string    $name
      * @param  int       $qty
-     * @param  int|float $price
-     * @param  int|float $vat
+     * @param  int|double $price
+     * @param  int|double $vat
      * @param  array     $options
      *
      * @return ProductInterface

@@ -238,7 +238,7 @@ class ProductTest extends TestCase
         $mistakes = [
             [
                 'value'     => null,
-                'message'   => 'The product price must be a numeric|float value.'
+                'message'   => 'The product price must be a numeric|double value.'
             ],[
                 'value'     => 0,
                 'message'   => 'The product price must be greater than 0.'
@@ -264,7 +264,7 @@ class ProductTest extends TestCase
         $mistakes = [
             [
                 'value'     => null,
-                'message'   => 'The product VAT must be a numeric|float value.'
+                'message'   => 'The product VAT must be a numeric|double value.'
             ],[
                 'value'     => - 1,
                 'message'   => 'The product VAT must be greater than or equal to 0.'
