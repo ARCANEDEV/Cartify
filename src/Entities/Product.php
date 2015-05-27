@@ -204,7 +204,6 @@ class Product implements ProductInterface
     public function setId($id)
     {
         $this->checkId($id);
-
         $this->propId = $id;
 
         return $this;
@@ -230,7 +229,6 @@ class Product implements ProductInterface
     public function setName($name)
     {
         $this->checkName($name);
-
         $this->propName = $name;
 
         return $this;
@@ -256,7 +254,6 @@ class Product implements ProductInterface
     public function setQty($qty)
     {
         $this->checkQuantity($qty);
-
         $this->propQty = intval($qty);
 
         return $this;
@@ -282,7 +279,6 @@ class Product implements ProductInterface
     public function setPrice($price)
     {
         $this->checkPrice($price);
-
         $this->propPrice = doubleval($price);
 
         return $this;
@@ -308,7 +304,6 @@ class Product implements ProductInterface
     public function setVat($vat)
     {
         $this->checkVat($vat);
-
         $this->propVat = $vat;
 
         return $this;
@@ -407,9 +402,7 @@ class Product implements ProductInterface
         if (count($found) !== count($this->required)) {
             $missing = implode(', ', array_diff($this->required, $found));
 
-            throw new InvalidProductException(
-                "These attributes are missing: $missing."
-            );
+            throw new InvalidProductException("These attributes are missing: $missing.");
         }
     }
 
@@ -422,13 +415,8 @@ class Product implements ProductInterface
      */
     private function checkId($id)
     {
-        if (
-            $this->checkIsNullOrEmpty($id) ||
-            $this->checkIsEmptyString($id)
-        ) {
-            throw new InvalidProductIDException(
-                'The product id is empty or equal to 0.'
-            );
+        if ( ! $this->isValidString($id)) {
+            throw new InvalidProductIDException('The product id is empty or equal to 0.');
         }
     }
 
@@ -441,10 +429,7 @@ class Product implements ProductInterface
      */
     private function checkName($name)
     {
-        if (
-            $this->checkIsNullOrEmpty($name) ||
-            $this->checkIsEmptyString($name)
-        ) {
+        if ( ! $this->isValidString($name)) {
             throw new InvalidProductException('The product name is empty.');
         }
     }

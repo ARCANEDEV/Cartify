@@ -2,6 +2,26 @@
 
 trait CheckerTrait
 {
+    /* ------------------------------------------------------------------------------------------------
+     |  Validation Functions
+     | ------------------------------------------------------------------------------------------------
+     */
+    /**
+     * Check if it is valid string
+     *
+     * @param  mixed $value
+     *
+     * @return bool
+     */
+    private function isValidString($value)
+    {
+        return ! ($this->checkIsNullOrEmpty($value) || $this->checkIsEmptyString($value));
+    }
+
+    /* ------------------------------------------------------------------------------------------------
+     |  Check Functions
+     | ------------------------------------------------------------------------------------------------
+     */
     /**
      * Check the value is not empty
      *
