@@ -14,11 +14,11 @@ use Arcanedev\Cartify\Exceptions\InvalidVatException;
  * @property string         id
  * @property string         name
  * @property int            qty
- * @property float          price
- * @property int|float      vat
- * @property float          total
- * @property float          vatPrice
- * @property float          totalPrice
+ * @property double          price
+ * @property int|double      vat
+ * @property double          total
+ * @property double          vatPrice
+ * @property double          totalPrice
  * @property ProductOptions options
  */
 class Product implements ProductInterface
@@ -51,14 +51,14 @@ class Product implements ProductInterface
     /**
      * Price in cents
      *
-     * @var float
+     * @var double
      */
     protected $propPrice;
 
     /**
      * Value-added tax
      *
-     * @var float
+     * @var double
      */
     protected $propVat;
 
@@ -102,7 +102,7 @@ class Product implements ProductInterface
     /**
      * Load product attributes
      *
-     * @param array $attributes
+     * @param  array $attributes
      *
      * @throws InvalidProductException
      *
@@ -135,6 +135,13 @@ class Product implements ProductInterface
      |  Getters and Setters
      | ------------------------------------------------------------------------------------------------
      */
+    /**
+     * Magic get method
+     *
+     * @param  string $name
+     *
+     * @return mixed
+     */
     public function __get($name)
     {
         if ($method = $this->hasPropertyOrMethod($name)) {
@@ -144,6 +151,12 @@ class Product implements ProductInterface
         return $this->options->get($name);
     }
 
+    /**
+     * Magic set method
+     *
+     * @param string $name
+     * @param mixed  $value
+     */
     public function __set($name, $value)
     {
         if ($method = $this->hasPropertyOrMethod($name, 'set')) {
@@ -234,17 +247,17 @@ class Product implements ProductInterface
     /**
      * Get product price
      *
-     * @return float
+     * @return double
      */
     public function getPrice()
     {
-        return floatval($this->propPrice);
+        return doubleval($this->propPrice);
     }
 
     /**
      * Set product price
      *
-     * @param  float $price
+     * @param  double $price
      *
      * @return self
      */
@@ -252,7 +265,7 @@ class Product implements ProductInterface
     {
         $this->checkPrice($price);
 
-        $this->propPrice = floatval($price);
+        $this->propPrice = doubleval($price);
 
         return $this;
     }
@@ -270,7 +283,7 @@ class Product implements ProductInterface
     /**
      * Set product Value-added tax
      *
-     * @param  int $vat
+     * @param  double|int $vat
      *
      * @return self
      */
@@ -284,32 +297,33 @@ class Product implements ProductInterface
     }
 
     /**
-     * Get
-     * @return float
+     * Get total without VAT
+     *
+     * @return double
      */
     public function getTotal()
     {
-        return floatval($this->qty * $this->propPrice);
+        return doubleval($this->qty * $this->propPrice);
     }
 
     /**
      * Get Vat price
      *
-     * @return float
+     * @return double
      */
     public function getVatPrice()
     {
-        return floatval($this->getTotal() * ($this->getVat() / 100));
+        return doubleval($this->getTotal() * ($this->getVat() / 100));
     }
 
     /**
      * Get total price
      *
-     * @return float
+     * @return double
      */
     public function getTotalPrice()
     {
-        return floatval($this->getTotal() + $this->getVatPrice());
+        return doubleval($this->getTotal() + $this->getVatPrice());
     }
 
     /**
@@ -346,8 +360,8 @@ class Product implements ProductInterface
      * @param  string    $id
      * @param  string    $name
      * @param  int       $qty
-     * @param  int|float $price
-     * @param  int|float $vat
+     * @param  int|double $price
+     * @param  int|double $vat
      * @param  array     $options
      *
      * @return Product
@@ -437,7 +451,7 @@ class Product implements ProductInterface
     /**
      * Check the price
      *
-     * @param  float $price
+     * @param  double $price
      *
      * @throws InvalidPriceException
      */
@@ -445,17 +459,17 @@ class Product implements ProductInterface
     {
         if ( ! $this->checkIsFloatNumber($price)) {
             throw new InvalidPriceException(
-                'The product price must be a numeric|float value.'
+                'The product price must be a numeric|double value.'
             );
         }
 
-        if (floatval($price) <= 0) {
+        if (doubleval($price) <= 0) {
             throw new InvalidPriceException(
                 'The product price must be greater than 0.'
             );
         }
 
-        $price = floatval($price);
+        $price = doubleval($price);
     }
 
     /**
@@ -469,17 +483,17 @@ class Product implements ProductInterface
     {
         if ( ! $this->checkIsFloatNumber($vat)) {
             throw new InvalidVatException(
-                'The product VAT must be a numeric|float value.'
+                'The product VAT must be a numeric|double value.'
             );
         }
 
-        if (floatval($vat) < 0) {
+        if (doubleval($vat) < 0) {
             throw new InvalidVatException(
                 'The product VAT must be greater than or equal to 0.'
             );
         }
 
-        $vat = floatval($vat);
+        $vat = doubleval($vat);
     }
 
     /**
@@ -507,21 +521,21 @@ class Product implements ProductInterface
     }
 
     /**
-     * Check is a float value
+     * Check is a double value
      *
-     * @param  float $value
+     * @param  double $value
      *
      * @return bool
      */
     private function checkIsFloatNumber($value)
     {
-        return is_numeric($value) or is_float($value);
+        return is_numeric($value) or is_double($value);
     }
 
     /**
      * Check is an integer value
      *
-     * @param  float $value
+     * @param  double $value
      *
      * @return bool
      */
@@ -544,7 +558,7 @@ class Product implements ProductInterface
         $method   = $prefix . $name;
 
         return (
-            property_exists($this, 'prop'  . $name) or
+            property_exists($this, 'prop'  . $name) ||
             method_exists($this, $method)
         ) ? $method : null;
     }
