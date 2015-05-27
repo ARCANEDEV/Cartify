@@ -8,7 +8,7 @@
  * @property string                  name
  * @property int                     qty
  * @property double                  price
- * @property int|double              vat
+ * @property double                  vat
  * @property double                  total
  * @property double                  vatPrice
  * @property double                  totalPrice
@@ -87,14 +87,14 @@ interface ProductInterface
     /**
      * Get product Value-added tax
      *
-     * @return int
+     * @return double
      */
     public function getVat();
 
     /**
      * Set product Value-added tax
      *
-     * @param  double|int $vat
+     * @param  double $vat
      *
      * @return self
      */
@@ -143,14 +143,14 @@ interface ProductInterface
     /**
      * Create a new product
      *
-     * @param  string     $id
-     * @param  string     $name
-     * @param  int        $qty
-     * @param  int|double $price
-     * @param  int|double $vat
-     * @param  array      $options
+     * @param  string   $id
+     * @param  string   $name
+     * @param  int      $qty
+     * @param  double   $price
+     * @param  double   $vat
+     * @param  array    $options
      *
      * @return ProductInterface
      */
-    public static function create($id, $name, $qty, $price, $vat = 0, array $options = []);
+    public static function create($id, $name, $qty, $price, $vat = 0.0, array $options = []);
 }

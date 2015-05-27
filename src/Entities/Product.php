@@ -13,15 +13,15 @@ use Arcanedev\Cartify\Traits\CheckerTrait;
  * Class Product
  * @package Arcanedev\Cartify\Entities
  *
- * @property string         id
- * @property string         name
- * @property int            qty
- * @property double          price
- * @property int|double      vat
- * @property double          total
- * @property double          vatPrice
- * @property double          totalPrice
- * @property ProductOptions options
+ * @property string                     id
+ * @property string                     name
+ * @property int                        qty
+ * @property double                     price
+ * @property double                     vat
+ * @property double                     total
+ * @property double                     vatPrice
+ * @property double                     totalPrice
+ * @property ProductOptionsInterface    options
  */
 class Product implements ProductInterface
 {
@@ -301,7 +301,7 @@ class Product implements ProductInterface
     /**
      * Set product Value-added tax
      *
-     * @param  double|int $vat
+     * @param  double $vat
      *
      * @return self
      */
@@ -375,12 +375,12 @@ class Product implements ProductInterface
     /**
      * Create a new product
      *
-     * @param  string     $id
-     * @param  string     $name
-     * @param  int        $qty
-     * @param  int|double $price
-     * @param  int|double $vat
-     * @param  array      $options
+     * @param  string   $id
+     * @param  string   $name
+     * @param  int      $qty
+     * @param  double   $price
+     * @param  double   $vat
+     * @param  array    $options
      *
      * @return Product
      */
@@ -392,6 +392,13 @@ class Product implements ProductInterface
     /* ------------------------------------------------------------------------------------------------
      |  Check Functions
      | ------------------------------------------------------------------------------------------------
+     */
+    /**
+     * Check required attributes
+     *
+     * @param  array $attributes
+     *
+     * @throws InvalidProductException
      */
     private function checkRequiredAttributes(array $attributes)
     {
@@ -493,7 +500,7 @@ class Product implements ProductInterface
     /**
      * Check the VAT
      *
-     * @param  double|int $vat
+     * @param  double $vat
      *
      * @throws InvalidVatException
      */
@@ -528,7 +535,7 @@ class Product implements ProductInterface
         $method   = $methodPrefix . $name;
 
         return (
-            property_exists($this, 'prop'  . $name) ||
+            property_exists($this, 'prop' . $name) ||
             method_exists($this, $method)
         ) ? $method : null;
     }
