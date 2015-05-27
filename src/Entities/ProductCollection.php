@@ -2,7 +2,7 @@
 
 use Arcanedev\Cartify\Contracts\ProductInterface;
 use Arcanedev\Cartify\Contracts\ProductOptionsInterface;
-use Arcanedev\Cartify\Support\Collection;
+use Arcanedev\Cartify\Bases\Collection;
 
 /**
  * Class ProductCollection

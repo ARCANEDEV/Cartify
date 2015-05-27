@@ -1,6 +1,6 @@
 <?php namespace Arcanedev\Cartify\Entities;
 
-use Arcanedev\Cartify\Support\Collection;
+use Arcanedev\Cartify\Bases\Collection;
 
 /**
  * Class ProductOptions
