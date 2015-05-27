@@ -75,12 +75,16 @@ class ProductOptionsTest extends TestCase
     }
 
     /** @test */
-    public function it_can_add_an_option()
+    public function it_can_add_options()
     {
         // Create
         $options            = $this->makeAndGetOptions();
         $rating             = 5;
         $isbn               = $this->faker->ean13;
+
+        // Assert
+        $this->assertNull($this->options->rating);
+        $this->assertNull($this->options->isbn);
 
         // Then
         $options['rating']  = $this->options['rating'] = $rating;
