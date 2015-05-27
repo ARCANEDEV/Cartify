@@ -335,7 +335,7 @@ class Cartify
      */
     protected function addRow($id, $name, $qty, $price, array $options = [])
     {
-        if (empty($id) or empty($name) or empty($qty) or ! isset($price)) {
+        if (empty($id) || empty($name) || empty($qty) || ! isset($price)) {
             throw new InvalidProductException;
         }
 
@@ -360,6 +360,7 @@ class Cartify
 
         return $this->updateCart($cart);
     }
+
     /**
      * Generate a unique id for the new row
      *
