@@ -94,7 +94,7 @@ interface ProductInterface
     /**
      * Set product Value-added tax
      *
-     * @param  int $vat
+     * @param  double|int $vat
      *
      * @return self
      */
@@ -143,12 +143,12 @@ interface ProductInterface
     /**
      * Create a new product
      *
-     * @param  string    $id
-     * @param  string    $name
-     * @param  int       $qty
+     * @param  string     $id
+     * @param  string     $name
+     * @param  int        $qty
      * @param  int|double $price
      * @param  int|double $vat
-     * @param  array     $options
+     * @param  array      $options
      *
      * @return ProductInterface
      */

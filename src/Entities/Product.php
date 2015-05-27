@@ -399,7 +399,7 @@ class Product implements ProductInterface
     private function checkId($id)
     {
         if (
-            $this->checkIsNullOrEmpty($id) or
+            $this->checkIsNullOrEmpty($id) ||
             $this->checkIsEmptyString($id)
         ) {
             throw new InvalidProductIDException(
@@ -418,7 +418,7 @@ class Product implements ProductInterface
     private function checkName($name)
     {
         if (
-            $this->checkIsNullOrEmpty($name) or
+            $this->checkIsNullOrEmpty($name) ||
             $this->checkIsEmptyString($name)
         ) {
             throw new InvalidProductException('The product name is empty.');
@@ -506,7 +506,7 @@ class Product implements ProductInterface
      */
     private function checkIsNullOrEmpty($value)
     {
-        return is_null($value) or empty($value);
+        return is_null($value) || empty($value);
     }
 
     /**
@@ -518,7 +518,7 @@ class Product implements ProductInterface
      */
     private function checkIsEmptyString($value)
     {
-        return is_string($value) and trim($value) === '';
+        return is_string($value) && trim($value) === '';
     }
 
     /**
@@ -530,7 +530,7 @@ class Product implements ProductInterface
      */
     private function checkIsDoubleNumber($value)
     {
-        return is_numeric($value) or is_double($value);
+        return is_numeric($value) || is_double($value);
     }
 
     /**
@@ -542,7 +542,7 @@ class Product implements ProductInterface
      */
     private function checkIsIntegerNumber($value)
     {
-        return is_numeric($value) or is_int($value);
+        return is_numeric($value) || is_int($value);
     }
 
     /**
