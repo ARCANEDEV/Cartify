@@ -7,6 +7,7 @@ use Arcanedev\Cartify\Exceptions\InvalidProductException;
 use Arcanedev\Cartify\Exceptions\InvalidProductIDException;
 use Arcanedev\Cartify\Exceptions\InvalidQuantityException;
 use Arcanedev\Cartify\Exceptions\InvalidVatException;
+use Arcanedev\Cartify\Traits\CheckerTrait;
 
 /**
  * Class Product
@@ -24,6 +25,12 @@ use Arcanedev\Cartify\Exceptions\InvalidVatException;
  */
 class Product implements ProductInterface
 {
+    /* ------------------------------------------------------------------------------------------------
+     |  Traits
+     | ------------------------------------------------------------------------------------------------
+     */
+    use CheckerTrait;
+
     /* ------------------------------------------------------------------------------------------------
      |  Properties
      | ------------------------------------------------------------------------------------------------
@@ -97,6 +104,10 @@ class Product implements ProductInterface
      */
     public function __construct(array $attributes = [])
     {
+        if (empty($attributes)) {
+            throw new InvalidProductException('The product attributes is empty');
+        }
+
         $this->load($attributes);
     }
 
@@ -111,12 +122,6 @@ class Product implements ProductInterface
      */
     private function load(array $attributes)
     {
-        if (empty($attributes)) {
-            throw new InvalidProductException(
-                'The product attributes is empty'
-            );
-        }
-
         $this->checkRequiredAttributes($attributes);
         $this->setAttributes($attributes);
         $this->generateHashedID();
@@ -126,19 +131,22 @@ class Product implements ProductInterface
 
     /**
      * Set product attributes
+     * @todo: Merge the rest of the attribute to options
      *
      * @param  array $attributes
      */
     private function setAttributes(array $attributes)
     {
-        $this->setId($attributes['id']);
-        $this->setName($attributes['name']);
-        $this->setQty($attributes['qty']);
-        $this->setPrice($attributes['price']);
-        $this->setVat(array_key_exists('vat', $attributes) ? $attributes['vat'] : 0);
-
-        // TODO: Merge the rest of the attribute to options
-        $this->setOptions(array_key_exists('options', $attributes) ? $attributes['options'] : []);
+        $this->setId($attributes['id'])
+             ->setName($attributes['name'])
+             ->setQty($attributes['qty'])
+             ->setPrice($attributes['price'])
+             ->setVat(
+                 array_key_exists('vat', $attributes) ? $attributes['vat'] : 0
+             )
+             ->setOptions(
+                 array_key_exists('options', $attributes) ? $attributes['options'] : []
+             );
     }
 
     /* ------------------------------------------------------------------------------------------------
@@ -507,65 +515,17 @@ class Product implements ProductInterface
     }
 
     /**
-     * Check the value is not empty
-     *
-     * @param  mixed $value
-     *
-     * @return bool
-     */
-    private function checkIsNullOrEmpty($value)
-    {
-        return is_null($value) || empty($value);
-    }
-
-    /**
-     * Check is a string value
-     *
-     * @param  string $value
-     *
-     * @return bool
-     */
-    private function checkIsEmptyString($value)
-    {
-        return is_string($value) && trim($value) === '';
-    }
-
-    /**
-     * Check is a double value
-     *
-     * @param  mixed $value
-     *
-     * @return bool
-     */
-    private function checkIsDoubleNumber($value)
-    {
-        return is_numeric($value) || is_double($value);
-    }
-
-    /**
-     * Check is an integer value
-     *
-     * @param  double $value
-     *
-     * @return bool
-     */
-    private function checkIsIntegerNumber($value)
-    {
-        return is_numeric($value) || is_int($value);
-    }
-
-    /**
      * Check if product has a method to get or set a property
      *
      * @param  string $name
-     * @param  string $prefix
+     * @param  string $methodPrefix
      *
      * @return null|string
      */
-    private function hasPropertyOrMethod($name, $prefix = 'get')
+    private function hasPropertyOrMethod($name, $methodPrefix = 'get')
     {
         $name     = ucfirst(strtolower($name));
-        $method   = $prefix . $name;
+        $method   = $methodPrefix . $name;
 
         return (
             property_exists($this, 'prop'  . $name) ||
