@@ -17,7 +17,8 @@
         "orchestra/testbench": "~2.2",
         "phpunit/phpcov": "~2.0",
         "mockery/mockery": "~0.9",
-        "fzaninotto/faker": "~1.4"
+        "fzaninotto/faker": "~1.4",
+        "scrutinizer/ocular": "~1.1"
     },
     "autoload": {
         "psr-4": {
