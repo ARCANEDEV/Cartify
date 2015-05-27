@@ -137,17 +137,7 @@ class Product implements ProductInterface
      */
     public function __get($name)
     {
-        $prop = ucfirst(strtolower($name));
-
-        if (property_exists($this, 'prop' . $prop)) {
-            $property = 'get' . $prop;
-
-            return $this->{$property}();
-        }
-
-        $method = 'get' . $prop;
-
-        if (method_exists($this, $method)) {
+        if ($method = $this->hasPropertyOrMethod($name)) {
             return $this->{$method}();
         }
 
@@ -156,17 +146,12 @@ class Product implements ProductInterface
 
     public function __set($name, $value)
     {
-        $prop = ucfirst(strtolower($name));
-
-        if (property_exists($this, 'prop' . $prop)) {
-            $property = 'set' . $prop;
-
-            $this->{$property}($value);
+        if ($method = $this->hasPropertyOrMethod($name, 'set')) {
+            $this->{$method}($value);
         }
 
         $this->options->put($name, $value);
     }
-
 
     /**
      * Get product id
@@ -543,6 +528,25 @@ class Product implements ProductInterface
     private function checkIsIntegerNumber($value)
     {
         return is_numeric($value) or is_int($value);
+    }
+
+    /**
+     * Check if product has a method to get or set a property
+     *
+     * @param  string $name
+     * @param  string $prefix
+     *
+     * @return null|string
+     */
+    private function hasPropertyOrMethod($name, $prefix = 'get')
+    {
+        $name     = ucfirst(strtolower($name));
+        $method   = $prefix . $name;
+
+        return (
+            property_exists($this, 'prop'  . $name) or
+            method_exists($this, $method)
+        ) ? $method : null;
     }
 
     /* ------------------------------------------------------------------------------------------------
