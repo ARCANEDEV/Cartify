@@ -118,6 +118,19 @@ class Product implements ProductInterface
         }
 
         $this->checkRequiredAttributes($attributes);
+        $this->setAttributes($attributes);
+        $this->generateHashedID();
+
+        return $this;
+    }
+
+    /**
+     * Set product attributes
+     *
+     * @param  array $attributes
+     */
+    private function setAttributes(array $attributes)
+    {
         $this->setId($attributes['id']);
         $this->setName($attributes['name']);
         $this->setQty($attributes['qty']);
@@ -126,10 +139,6 @@ class Product implements ProductInterface
 
         // TODO: Merge the rest of the attribute to options
         $this->setOptions(array_key_exists('options', $attributes) ? $attributes['options'] : []);
-
-        $this->generateHashedID();
-
-        return $this;
     }
 
     /* ------------------------------------------------------------------------------------------------
