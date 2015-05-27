@@ -123,7 +123,10 @@ class Product implements ProductInterface
     private function load(array $attributes)
     {
         $this->checkRequiredAttributes($attributes);
-        $this->fillOptionalAttributes($attributes);
+        $this->fillOptionalAttributes($attributes, [
+            'vat'     => 0,
+            'options' => []
+        ]);
         $this->setAttributes($attributes);
         $this->generateHashedID();
 
@@ -550,13 +553,12 @@ class Product implements ProductInterface
      *
      * @param array $attributes
      */
-    private function fillOptionalAttributes(array &$attributes)
+    private function fillOptionalAttributes(array &$attributes, $defaults = [])
     {
-        if ( ! array_key_exists('vat', $attributes)) {
-            $attributes['vat'] = 0;
-        }
-        if ( ! array_key_exists('options', $attributes)) {
-            $attributes['options'] = [];
+        foreach ($defaults as $key => $value) {
+            if ( ! array_key_exists($key, $attributes)) {
+                $attributes[$key] = $value;
+            }
         }
     }
 }
