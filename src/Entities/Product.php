@@ -1,6 +1,7 @@
 <?php namespace Arcanedev\Cartify\Entities;
 
 use Arcanedev\Cartify\Contracts\ProductInterface;
+use Arcanedev\Cartify\Contracts\ProductOptionsInterface;
 use Arcanedev\Cartify\Exceptions\InvalidPriceException;
 use Arcanedev\Cartify\Exceptions\InvalidProductException;
 use Arcanedev\Cartify\Exceptions\InvalidProductIDException;
@@ -329,7 +330,7 @@ class Product implements ProductInterface
     /**
      * Get product options
      *
-     * @return ProductOptions
+     * @return ProductOptionsInterface
      */
     public function getOptions()
     {
@@ -457,7 +458,7 @@ class Product implements ProductInterface
      */
     private function checkPrice(&$price)
     {
-        if ( ! $this->checkIsFloatNumber($price)) {
+        if ( ! $this->checkIsDoubleNumber($price)) {
             throw new InvalidPriceException(
                 'The product price must be a numeric|double value.'
             );
@@ -475,13 +476,13 @@ class Product implements ProductInterface
     /**
      * Check the VAT
      *
-     * @param  int $vat
+     * @param  double|int $vat
      *
      * @throws InvalidVatException
      */
     private function checkVat(&$vat)
     {
-        if ( ! $this->checkIsFloatNumber($vat)) {
+        if ( ! $this->checkIsDoubleNumber($vat)) {
             throw new InvalidVatException(
                 'The product VAT must be a numeric|double value.'
             );
@@ -523,11 +524,11 @@ class Product implements ProductInterface
     /**
      * Check is a double value
      *
-     * @param  double $value
+     * @param  mixed $value
      *
      * @return bool
      */
-    private function checkIsFloatNumber($value)
+    private function checkIsDoubleNumber($value)
     {
         return is_numeric($value) or is_double($value);
     }

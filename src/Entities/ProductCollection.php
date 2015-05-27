@@ -1,13 +1,14 @@
 <?php namespace Arcanedev\Cartify\Entities;
 
 use Arcanedev\Cartify\Contracts\ProductInterface;
+use Arcanedev\Cartify\Contracts\ProductOptionsInterface;
 use Arcanedev\Cartify\Support\Collection;
 
 /**
  * Class ProductCollection
  * @package Arcanedev\Cartify\Entities
  */
-class ProductCollection extends Collection
+class ProductCollection extends Collection implements ProductOptionsInterface
 {
     /* ------------------------------------------------------------------------------------------------
      |  Main Functions
