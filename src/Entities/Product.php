@@ -1,7 +1,6 @@
 <?php namespace Arcanedev\Cartify\Entities;
 
 use Arcanedev\Cartify\Contracts\ProductInterface;
-use Arcanedev\Cartify\Contracts\ProductOptionsInterface;
 use Arcanedev\Cartify\Exceptions\InvalidPriceException;
 use Arcanedev\Cartify\Exceptions\InvalidProductException;
 use Arcanedev\Cartify\Exceptions\InvalidProductIDException;
@@ -13,15 +12,15 @@ use Arcanedev\Cartify\Traits\CheckerTrait;
  * Class Product
  * @package Arcanedev\Cartify\Entities
  *
- * @property string                     id
- * @property string                     name
- * @property int                        qty
- * @property double                     price
- * @property double                     vat
- * @property double                     total
- * @property double                     vatPrice
- * @property double                     totalPrice
- * @property ProductOptionsInterface    options
+ * @property string         id
+ * @property string         name
+ * @property int            qty
+ * @property double         price
+ * @property double         vat
+ * @property double         total
+ * @property double         vatPrice
+ * @property double         totalPrice
+ * @property ProductOptions options
  */
 class Product implements ProductInterface
 {
@@ -73,7 +72,7 @@ class Product implements ProductInterface
     /**
      * Product options (metadata)
      *
-     * @var ProductOptionsInterface
+     * @var ProductOptions
      */
     protected $propOptions;
 
@@ -342,7 +341,7 @@ class Product implements ProductInterface
     /**
      * Get product options
      *
-     * @return ProductOptionsInterface
+     * @return ProductOptions
      */
     public function getOptions()
     {

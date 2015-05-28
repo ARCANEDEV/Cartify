@@ -1,18 +1,19 @@
 <?php namespace Arcanedev\Cartify\Contracts;
+use Arcanedev\Cartify\Entities\ProductOptions;
 
 /**
  * Interface ProductInterface
  * @package Arcanedev\Cartify\Contracts
  *
- * @property string                  id
- * @property string                  name
- * @property int                     qty
- * @property double                  price
- * @property double                  vat
- * @property double                  total
- * @property double                  vatPrice
- * @property double                  totalPrice
- * @property ProductOptionsInterface options
+ * @property string         id
+ * @property string         name
+ * @property int            qty
+ * @property double         price
+ * @property double         vat
+ * @property double         total
+ * @property double         vatPrice
+ * @property double         totalPrice
+ * @property ProductOptions options
  */
 interface ProductInterface
 {
@@ -123,7 +124,7 @@ interface ProductInterface
     /**
      * Get product options
      *
-     * @return ProductOptionsInterface
+     * @return ProductOptions
      */
     public function getOptions();
 

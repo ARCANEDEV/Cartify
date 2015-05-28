@@ -1,6 +1,5 @@
 <?php namespace Arcanedev\Cartify;
 
-use Arcanedev\Cartify\Contracts\CartInterface;
 use Arcanedev\Cartify\Contracts\EventHandler;
 use Arcanedev\Cartify\Contracts\SessionHandler;
 use Arcanedev\Cartify\Entities\Cart;
@@ -313,7 +312,7 @@ class Cartify
         $rows = [];
 
         foreach($this->getContent() as $item) {
-            /** @var CartInterface $item */
+            /** @var Cart $item */
             if ($item->search($search)) {
                 $rows[] = $item->rowid;
             }
