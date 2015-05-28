@@ -299,11 +299,11 @@ class Cartify
     /**
      * Search if the cart has a item
      *
-     * @param  array  $search  An array with the item ID and optional options
+     * @param  array         $attributes  An array with the item ID and optional options
      *
      * @return array|boolean
      */
-    public function search(array $search)
+    public function search(array $attributes)
     {
         if (empty($search)) {
             return false;
@@ -311,10 +311,10 @@ class Cartify
 
         $rows = [];
 
-        foreach($this->getContent() as $item) {
-            /** @var Cart $item */
-            if ($item->search($search)) {
-                $rows[] = $item->rowid;
+        foreach($this->getContent() as $product) {
+            /** @var Product $product */
+            if ($product->search($attributes)) {
+                $rows[] = $product->id;
             }
         }
 
@@ -389,13 +389,13 @@ class Cartify
     /**
      * Get the carts content, if there is no cart content set yet, return a new empty Collection
      *
-     * @return CartCollection
+     * @return ProductCollection
      */
     protected function getContent()
     {
         $content = $this->session->has($this->getInstance())
             ? $this->session->get($this->getInstance())
-            : new CartCollection;
+            : new ProductCollection;
 
         return $content;
     }
