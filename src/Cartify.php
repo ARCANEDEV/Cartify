@@ -111,11 +111,13 @@ class Cartify implements CartifyInterface
      * Add a product to the cart
      * @todo: Add optionnal VAT attribute
      *
-     * @param string|array  $id       Unique ID of the product|Item formated as array|Array of items
-     * @param string        $name
-     * @param int           $qty
-     * @param double        $price
-     * @param array         $options
+     * @param  string|array $id Unique ID of the product|Item formated as array|Array of items
+     * @param  string       $name
+     * @param  int          $qty
+     * @param  double       $price
+     * @param  array        $options
+     *
+     * @return self
      */
     public function add($id, $name = null, $qty = null, $price = null, array $options = [])
     {
@@ -126,7 +128,7 @@ class Cartify implements CartifyInterface
             if (is_multi_array($id)) {
                 $this->addMany($id);
 
-                return;
+                return $this;
             }
 
             $options = array_get($id, 'options', []);
@@ -135,7 +137,7 @@ class Cartify implements CartifyInterface
             $result = $this->addRow($id['id'], $id['name'], $id['qty'], $id['price'], $options);
             $this->fireEvent('added', array_merge($id, compact('options')));
 
-            return $result;
+            return $this;
         }
 
         $data = compact('id', 'name', 'qty', 'price', 'options');
@@ -144,7 +146,7 @@ class Cartify implements CartifyInterface
         $result = $this->addRow($id, $name, $qty, $price, $options);
         $this->fireEvent('added', $data);
 
-        return $result;
+        return $this;
     }
 
     /**
@@ -184,7 +186,7 @@ class Cartify implements CartifyInterface
      * @throws InvalidProductException
      * @throws InvalidQuantityException
      *
-     * @return
+     * @return self
      */
     private function addRow($id, $name, $qty, $price, array $options = [])
     {
@@ -200,18 +202,20 @@ class Cartify implements CartifyInterface
             throw new InvalidPriceException;
         }
 
-        $cart  = $this->getContent();
+        $cart     = $this->getContent();
         $hashedId = hash_id($id, $options);
 
-        if ($cart->has($hashedId)) {
-            $row  = $cart->get($hashedId);
-            $cart = $this->updateRow($hashedId, ['qty' => $row->qty + $qty]);
+        if ($cart->hasProduct($hashedId)) {
+            $product = $cart->getProduct($hashedId);
+            $cart    = $this->updateRow($hashedId, ['qty' => $product->qty + $qty]);
         }
         else {
             $cart = $this->createRow($hashedId, $id, $name, $qty, $price, $options);
         }
 
-        return $this->updateCart($cart);
+        $this->updateCart($cart);
+
+        return $this;
     }
 
     /**
@@ -246,7 +250,7 @@ class Cartify implements CartifyInterface
      *
      * @throws InvalidProductIDException
      *
-     * @return bool
+     * @return self
      */
     public function remove($hashedId)
     {
@@ -255,10 +259,12 @@ class Cartify implements CartifyInterface
         $cart = $this->getContent();
 
         $this->fireEvent('remove', $hashedId);
-        $cart->forget($hashedId);
+        $cart->removeProduct($hashedId);
         $this->fireEvent('removed', $hashedId);
 
-        return $this->updateCart($cart);
+        $this->updateCart($cart);
+
+        return $this;
     }
 
     /**
@@ -272,7 +278,9 @@ class Cartify implements CartifyInterface
     {
         $cart = $this->getContent();
 
-        return $cart->has($hashedId) ? $cart->get($hashedId) : null;
+        return $cart->hasProduct($hashedId)
+            ? $cart->getProduct($hashedId)
+            : null;
     }
 
     /**
@@ -290,15 +298,15 @@ class Cartify implements CartifyInterface
     /**
      * Empty the cart
      *
-     * @return boolean
+     * @return self
      */
     public function destroy()
     {
         $this->fireEvent('destroy');
-        $result = $this->updateCart(null);
+        $this->updateCart(new Cart);
         $this->fireEvent('destroyed');
 
-        return $result;
+        return $this;
     }
 
     /**
@@ -308,15 +316,18 @@ class Cartify implements CartifyInterface
      */
     public function total()
     {
-        $total = 0;
-        $cart = $this->getContent();
+        $products = $this->getContent()->allProducts();
 
-        if (empty($cart)) {
-            return $total;
+        if ($products->isEmpty()) {
+            return 0;
         }
 
-        foreach($cart as $row) {
-            $total += $row->subtotal;
+        $total = 0;
+
+        // TODO: Replace by sum method
+        foreach($products as $product) {
+            /** @var Product $product */
+            $total += $product->subtotal;
         }
 
         return $total;
@@ -334,13 +345,15 @@ class Cartify implements CartifyInterface
         $cart = $this->getContent();
 
         if ( ! $totalItems) {
-            return $cart->count();
+            return $cart->allProducts()->count();
         }
 
         $count = 0;
 
-        foreach($cart as $row) {
-            $count += $row->qty;
+        // TODO: replace by sum method
+        foreach($cart->allProducts() as $product) {
+            /** @var Product $product */
+            $count += $product->qty;
         }
 
         return $count;
@@ -361,7 +374,7 @@ class Cartify implements CartifyInterface
 
         $rows = [];
 
-        foreach($this->getContent() as $product) {
+        foreach($this->getContent()->allProducts() as $product) {
             /** @var Product $product */
             if ($product->search($attributes)) {
                 $rows[] = $product->id;
@@ -372,15 +385,15 @@ class Cartify implements CartifyInterface
     }
 
     /**
-     * Check if a rowid exists in the current cart instance
+     * Check if a hashed id exists in the current cart instance
      *
-     * @param  string  $id  Unique ID of the item
+     * @param  string  $hashedId  Unique ID of the item
      *
      * @return boolean
      */
-    protected function hasProductById($id)
+    protected function hasProductById($hashedId)
     {
-        return $this->getContent()->has($id);
+        return $this->getContent()->hasProduct($hashedId);
     }
 
     /**
@@ -390,7 +403,7 @@ class Cartify implements CartifyInterface
      */
     protected function updateCart($cart)
     {
-        return $this->updateSessionCart($cart);
+        $this->updateSessionCart($cart);
     }
 
     /**
