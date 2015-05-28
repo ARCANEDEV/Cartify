@@ -1,6 +1,8 @@
 <?php namespace Arcanedev\Cartify\Entities;
 
 use Arcanedev\Cartify\Contracts\CartInterface;
+use Arcanedev\Cartify\Contracts\ProductInterface;
+use Arcanedev\Cartify\Exceptions\ProductNotFoundException;
 
 /**
  * Class Cart
@@ -30,15 +32,47 @@ class Cart implements CartInterface
      |  Main Functions
      | ------------------------------------------------------------------------------------------------
      */
-    /**
-     * An array with the item ID and optional options
-     *
-     * @param $search
-     *
-     * @return mixed
-     */
-    public function search($search)
+    public function getProduct($id)
     {
-        // TODO: Implement search() method.
+        if ($this->products->has($id)) {
+            return $this->products->get($id);
+        }
+
+        return null;
+    }
+
+    public function add(ProductInterface $product)
+    {
+        $this->products->put($product->id, $product);
+
+        return $this;
+    }
+
+    public function addProduct(array $attributes)
+    {
+        return $this->addProduct(new Product($attributes));
+    }
+
+    public function updateProduct($id, array $attributes)
+    {
+        if ( ! $this->hasProduct($id)) {
+            throw new ProductNotFoundException('Product not found !');
+        }
+
+        /** @var Product $product */
+        $product = $this->products->get($id);
+        $product->update($attributes);
+
+        return $this;
+    }
+
+    /**
+     * @param  string $id
+     *
+     * @return bool
+     */
+    public function hasProduct($id)
+    {
+        return $this->products->has($id);
     }
 }
