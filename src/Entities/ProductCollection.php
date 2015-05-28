@@ -56,6 +56,20 @@ class ProductCollection extends Collection implements ProductOptionsInterface
         return $this->add(new Product($attribute));
     }
 
+    public function updateProduct($id, array $attributes)
+    {
+        if ($this->has($id)) {
+            $product = $this->get($id);
+
+            $this->deleteProduct($id);
+
+            $product->update($attributes);
+            $this->put($product->id, $product);
+        }
+
+        return $this;
+    }
+
     /**
      * Delete a product form collection by id
      *
