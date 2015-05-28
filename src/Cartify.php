@@ -1,19 +1,19 @@
 <?php namespace Arcanedev\Cartify;
 
+use Arcanedev\Cartify\Contracts\CartifyInterface;
 use Arcanedev\Cartify\Contracts\EventHandler;
 use Arcanedev\Cartify\Contracts\SessionHandler;
 use Arcanedev\Cartify\Entities\Cart;
 use Arcanedev\Cartify\Entities\CartCollection;
 use Arcanedev\Cartify\Entities\Product;
 use Arcanedev\Cartify\Entities\ProductCollection;
-use Arcanedev\Cartify\Entities\ProductOptions;
 use Arcanedev\Cartify\Exceptions\CartNotFoundException;
 use Arcanedev\Cartify\Exceptions\InvalidPriceException;
 use Arcanedev\Cartify\Exceptions\InvalidProductException;
 use Arcanedev\Cartify\Exceptions\InvalidProductIDException;
 use Arcanedev\Cartify\Exceptions\InvalidQuantityException;
 
-class Cartify
+class Cartify implements CartifyInterface
 {
     /* ------------------------------------------------------------------------------------------------
      |  Constants
@@ -25,6 +25,20 @@ class Cartify
      |  Properties
      | ------------------------------------------------------------------------------------------------
      */
+    /**
+     * Current cart instance
+     *
+     * @var string
+     */
+    protected $instance = 'main';
+
+    /**
+     * Cart collection (main cart + wishlist cart ...)
+     *
+     * @var CartCollection
+     */
+    protected $carts;
+
     /**
      * Session class instance
      *
@@ -38,13 +52,6 @@ class Cartify
      * @var EventHandler
      */
     protected $event;
-
-    /**
-     * Current cart instance
-     *
-     * @var string
-     */
-    protected $instance = 'main';
 
     /* ------------------------------------------------------------------------------------------------
      |  Constructor
@@ -100,14 +107,14 @@ class Cartify
         return $this;
     }
 
-
     /**
-     * Add a row to the cart
+     * Add a product to the cart
+     * @todo: Add optionnal VAT attribute
      *
      * @param string|array  $id       Unique ID of the product|Item formated as array|Array of items
      * @param string        $name
      * @param int           $qty
-     * @param float         $price
+     * @param double        $price
      * @param array         $options
      */
     public function add($id, $name = null, $qty = null, $price = null, array $options = [])
@@ -116,27 +123,17 @@ class Cartify
         if (is_array($id)) {
             // And if it's not only an array, but a multidimensional array, we need to
             // recursively call the add function
-            if ($this->isMultiArray($id)) {
-                $this->fireEvent('batch', $id);
-                foreach($id as $item) {
-                    $this->addRow(
-                        $item['id'],
-                        $item['name'],
-                        $item['qty'],
-                        $item['price'],
-                        array_get($item, 'options', [])
-                    );
-                }
-                $this->fireEvent('batched', $id);
+            if (is_multi_array($id)) {
+                $this->addMany($id);
 
                 return;
             }
 
             $options = array_get($id, 'options', []);
 
-            $this->fireEvent('add', array_merge($id, ['options' => $options]));
+            $this->fireEvent('add', array_merge($id, compact('options')));
             $result = $this->addRow($id['id'], $id['name'], $id['qty'], $id['price'], $options);
-            $this->fireEvent('added', array_merge($id, ['options' => $options]));
+            $this->fireEvent('added', array_merge($id, compact('options')));
 
             return $result;
         }
@@ -151,34 +148,93 @@ class Cartify
     }
 
     /**
+     * Add many products to the cart
+     *
+     * @param  array $items
+     *
+     * @throws InvalidPriceException
+     * @throws InvalidProductException
+     * @throws InvalidQuantityException
+     */
+    private function addMany(array $items)
+    {
+        $this->fireEvent('batch', $items);
+        foreach ($items as $item) {
+            $this->addRow(
+                $item['id'],
+                $item['name'],
+                $item['qty'],
+                $item['price'],
+                array_get($item, 'options', [])
+            );
+        }
+        $this->fireEvent('batched', $items);
+    }
+
+    /**
+     * Add row to the cart
+     *
+     * @param  string $id      Unique ID of the item
+     * @param  string $name    Name of the item
+     * @param  int    $qty     Item qty to add to the cart
+     * @param  float  $price   Price of one item
+     * @param  array  $options Array of additional options, such as 'size' or 'color'
+     *
+     * @throws InvalidPriceException
+     * @throws InvalidProductException
+     * @throws InvalidQuantityException
+     *
+     * @return
+     */
+    private function addRow($id, $name, $qty, $price, array $options = [])
+    {
+        if (empty($id) || empty($name) || empty($qty) || ! isset($price)) {
+            throw new InvalidProductException;
+        }
+
+        if ( ! is_numeric($qty)) {
+            throw new InvalidQuantityException;
+        }
+
+        if ( ! is_numeric($price)) {
+            throw new InvalidPriceException;
+        }
+
+        $cart  = $this->getContent();
+        $hashedId = hash_id($id, $options);
+
+        if ($cart->has($hashedId)) {
+            $row  = $cart->get($hashedId);
+            $cart = $this->updateRow($hashedId, ['qty' => $row->qty + $qty]);
+        }
+        else {
+            $cart = $this->createRow($hashedId, $id, $name, $qty, $price, $options);
+        }
+
+        return $this->updateCart($cart);
+    }
+
+    /**
      * Update the quantity of one row of the cart
      *
-     * @param  string        $rowId
+     * @param  string        $hashedId
      * @param  integer|array $attribute New quantity|Array of attributes
      *
      * @throws InvalidProductIDException
      *
      * @return bool
      */
-    public function update($rowId, $attribute)
+    public function update($hashedId, $attribute)
     {
-        if ( ! $this->hasRowId($rowId)) {
-            throw new InvalidProductIDException;
-        }
+        $this->hasProductOrFail($hashedId);
 
-        if (is_array($attribute)) {
-            $this->fireEvent('update', $rowId);
-            $result = $this->updateAttribute($rowId, $attribute);
-            $this->fireEvent('updated', $rowId);
+        $this->fireEvent('update', $hashedId);
 
-            return $result;
-        }
+        $result = is_array($attribute)
+            ? $this->updateAttribute($hashedId, $attribute)
+            : $this->updateQty($hashedId, $attribute);
 
-        // Fire the cart.update event
-        $this->event->fire('cart.update', $rowId);
-        $result = $this->updateQty($rowId, $attribute);
-        // Fire the cart.updated event
-        $this->event->fire('cart.updated', $rowId);
+        $this->fireEvent('updated', $hashedId);
 
         return $result;
     }
@@ -186,25 +242,21 @@ class Cartify
     /**
      * Remove a row from the cart
      *
-     * @param  string $rowId The rowid of the item
+     * @param  string $hashedId The hashed Id of the product
      *
      * @throws InvalidProductIDException
      *
      * @return bool
      */
-    public function remove($rowId)
+    public function remove($hashedId)
     {
-        if ( ! $this->hasRowId($rowId)) {
-            throw new InvalidProductIDException;
-        }
+        $this->hasProductOrFail($hashedId);
 
         $cart = $this->getContent();
 
-        $this->fireEvent('remove', $rowId);
-
-        $cart->forget($rowId);
-
-        $this->fireEvent('removed', $rowId);
+        $this->fireEvent('remove', $hashedId);
+        $cart->forget($hashedId);
+        $this->fireEvent('removed', $hashedId);
 
         return $this->updateCart($cart);
     }
@@ -212,15 +264,15 @@ class Cartify
     /**
      * Get a row of the cart by its ID
      *
-     * @param  string  $rowId  The ID of the row to fetch
+     * @param  string  $hashedId  The ID of the product to fetch
      *
-     * @return CartCollection
+     * @return Product
      */
-    public function get($rowId)
+    public function get($hashedId)
     {
         $cart = $this->getContent();
 
-        return $cart->has($rowId) ? $cart->get($rowId) : null;
+        return $cart->has($hashedId) ? $cart->get($hashedId) : null;
     }
 
     /**
@@ -243,9 +295,7 @@ class Cartify
     public function destroy()
     {
         $this->fireEvent('destroy');
-
         $result = $this->updateCart(null);
-
         $this->fireEvent('destroyed');
 
         return $result;
@@ -322,56 +372,13 @@ class Cartify
     }
 
     /**
-     * Add row to the cart
-     *
-     * @param  string $id      Unique ID of the item
-     * @param  string $name    Name of the item
-     * @param  int    $qty     Item qty to add to the cart
-     * @param  float  $price   Price of one item
-     * @param  array  $options Array of additional options, such as 'size' or 'color'
-     *
-     * @throws InvalidPriceException
-     * @throws InvalidProductException
-     * @throws InvalidQuantityException
-     *
-     * @return
-     */
-    protected function addRow($id, $name, $qty, $price, array $options = [])
-    {
-        if (empty($id) || empty($name) || empty($qty) || ! isset($price)) {
-            throw new InvalidProductException;
-        }
-
-        if ( ! is_numeric($qty)) {
-            throw new InvalidQuantityException;
-        }
-
-        if ( ! is_numeric($price)) {
-            throw new InvalidPriceException;
-        }
-
-        $cart  = $this->getContent();
-        $rowId = hash_id($id, $options);
-
-        if ($cart->has($rowId)) {
-            $row  = $cart->get($rowId);
-            $cart = $this->updateRow($rowId, ['qty' => $row->qty + $qty]);
-        }
-        else {
-            $cart = $this->createRow($rowId, $id, $name, $qty, $price, $options);
-        }
-
-        return $this->updateCart($cart);
-    }
-
-    /**
      * Check if a rowid exists in the current cart instance
      *
      * @param  string  $id  Unique ID of the item
      *
      * @return boolean
      */
-    protected function hasRowId($id)
+    protected function hasProductById($id)
     {
         return $this->getContent()->has($id);
     }
@@ -379,23 +386,23 @@ class Cartify
     /**
      * Update the cart
      *
-     * @param  CartCollection  $cart  The new cart content
+     * @param  Cart $cart  The new cart content
      */
     protected function updateCart($cart)
     {
-        return $this->session->put($this->getInstance(), $cart);
+        return $this->updateSessionCart($cart);
     }
 
     /**
      * Get the carts content, if there is no cart content set yet, return a new empty Collection
      *
-     * @return ProductCollection
+     * @return Cart
      */
     protected function getContent()
     {
-        $content = $this->session->has($this->getInstance())
-            ? $this->session->get($this->getInstance())
-            : new ProductCollection;
+        $content = $this->hasSessionCart()
+            ? $this->getSessionCart()
+            : new Cart;
 
         return $content;
     }
@@ -403,31 +410,17 @@ class Cartify
     /**
      * Update a row if the rowId already exists
      *
-     * @param  string $rowId      The ID of the row to update
+     * @param  string $hashedId   The ID of the row to update
      * @param  array  $attributes The quantity to add to the row
      *
-     * @return CartCollection
+     * @return Cart
      */
-    protected function updateRow($rowId, $attributes)
+    protected function updateRow($hashedId, $attributes)
     {
-        $cart = $this->getContent();
-        $row  = $cart->get($rowId);
+        $cart    = $this->getContent();
+        $product = $cart->getProduct($hashedId);
 
-        foreach($attributes as $key => $value) {
-            if ($key == 'options') {
-                $options = $row->options->merge($value);
-                $row->put($key, $options);
-            }
-            else {
-                $row->put($key, $value);
-            }
-        }
-
-        if ( ! is_null(array_keys($attributes, ['qty', 'price']))) {
-            $row->put('subtotal', $row->qty * $row->price);
-        }
-
-        $cart->put($rowId, $row);
+        $cart->update($hashedId, $product->update($attributes));
 
         return $cart;
     }
@@ -435,7 +428,7 @@ class Cartify
     /**
      * Create a new row Object
      *
-     * @param  string  $rowId    The ID of the new row
+     * @param  string  $hashedId    The ID of the new row
      * @param  string  $id       Unique ID of the item
      * @param  string  $name     Name of the item
      * @param  int     $qty      Item qty to add to the cart
@@ -444,20 +437,11 @@ class Cartify
      *
      * @return CartCollection
      */
-    protected function createRow($rowId, $id, $name, $qty, $price, $options)
+    protected function createRow($hashedId, $id, $name, $qty, $price, array $options)
     {
         $cart = $this->getContent();
 
-        $newRow = new Product([
-            'rowid'     => $rowId,
-            'id'        => $id,
-            'name'      => $name,
-            'qty'       => $qty,
-            'price'     => $price,
-            'options'   => new ProductOptions($options),
-        ]);
-
-        $cart->put($rowId, $newRow);
+        $cart->addProduct(compact('hashedId', 'id', 'name', 'qty', 'price', 'options'));
 
         return $cart;
     }
@@ -491,6 +475,22 @@ class Cartify
         return $this->updateRow($rowId, $attributes);
     }
 
+    /* ------------------------------------------------------------------------------------------------
+     |  Check Functions
+     | ------------------------------------------------------------------------------------------------
+     */
+    /**
+     * @param $id
+     *
+     * @throws InvalidProductIDException
+     */
+    private function hasProductOrFail($id)
+    {
+        if ( ! $this->hasProductById($id)) {
+            throw new InvalidProductIDException;
+        }
+    }
+
     /**
      * Check if the array is a multidimensional array
      *
@@ -514,5 +514,33 @@ class Cartify
     private function fireEvent($name, $id = null)
     {
         $this->event->fire('cart.' . $name, $id);
+    }
+
+    /**
+     * Update the session
+     *
+     * @param Cart $cart
+     */
+    private function updateSessionCart(Cart $cart)
+    {
+        $this->session->put($this->getInstance(), $cart);
+    }
+
+    /**
+     * Get from the session
+     *
+     * @return Cart
+     */
+    private function getSessionCart()
+    {
+        return $this->session->get($this->getInstance());
+    }
+
+    /**
+     * @return bool
+     */
+    private function hasSessionCart()
+    {
+        return $this->session->has($this->getInstance());
     }
 }
