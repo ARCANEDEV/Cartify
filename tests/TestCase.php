@@ -1,5 +1,6 @@
 <?php namespace Arcanedev\Cartify\Tests;
 
+use Arcanedev\Cartify\Entities\Product;
 use PHPUnit_Framework_TestCase;
 use Faker\Factory;
 
@@ -34,6 +35,11 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
      |  Other Functions
      | ------------------------------------------------------------------------------------------------
      */
+    protected function makeRandomProduct()
+    {
+        return new Product($this->getRandomProductData());
+    }
+
     /**
      * Get a random product data for tests
      *
