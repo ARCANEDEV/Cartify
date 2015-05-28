@@ -395,6 +395,21 @@ class Product implements ProductInterface
 
     public function update(array $attributes)
     {
+        foreach($attributes as $key => $value) {
+            if ($key == 'options') {
+                $options = $this->options->merge($value);
+                $this->put($key, $options);
+            }
+            else {
+                $this->put($key, $value);
+            }
+        }
+
+        if ( ! is_null(array_keys($attributes, ['qty', 'price']))) {
+            $this->put('subtotal', $this->qty * $this->price);
+        }
+
+        return $this;
     }
 
     /* ------------------------------------------------------------------------------------------------
