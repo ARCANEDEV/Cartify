@@ -73,7 +73,7 @@ class Product implements ProductInterface
     /**
      * Product options (metadata)
      *
-     * @var ProductOptions
+     * @var ProductOptionsInterface
      */
     protected $propOptions;
 
@@ -86,10 +86,11 @@ class Product implements ProductInterface
 
     /**
      * Optional attributes
+     * @todo: merge other attributes to options
      *
      * @var array
      */
-    private $optional = ['vat', 'options'];
+    // private $optional = ['vat', 'options'];
 
     /* ------------------------------------------------------------------------------------------------
      |  Constructor
@@ -128,7 +129,6 @@ class Product implements ProductInterface
             'options' => []
         ]);
         $this->setAttributes($attributes);
-        $this->generateHashedID();
 
         return $this;
     }
@@ -141,12 +141,12 @@ class Product implements ProductInterface
      */
     private function setAttributes(array $attributes)
     {
+        $this->setOptions($attributes['options']);
         $this->setId($attributes['id']);
         $this->setName($attributes['name']);
         $this->setQty($attributes['qty']);
         $this->setPrice($attributes['price']);
         $this->setVat($attributes['vat']);
-        $this->setOptions($attributes['options']);
     }
 
     /* ------------------------------------------------------------------------------------------------
@@ -204,7 +204,7 @@ class Product implements ProductInterface
     public function setId($id)
     {
         $this->checkId($id);
-        $this->propId = $id;
+        $this->propId = hash_id($id, $this->propOptions->toArray());
 
         return $this;
     }
@@ -529,17 +529,6 @@ class Product implements ProductInterface
      |  Other Functions
      | ------------------------------------------------------------------------------------------------
      */
-    /**
-     * Generate product id
-     */
-    private function generateHashedID()
-    {
-        $options = $this->propOptions->toArray();
-        ksort($options);
-
-        $this->propId = md5($this->propId . serialize($options));
-    }
-
     /**
      * Fill optional attributes
      *
