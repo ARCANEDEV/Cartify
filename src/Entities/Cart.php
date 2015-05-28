@@ -14,6 +14,8 @@ class Cart implements CartInterface
      | ------------------------------------------------------------------------------------------------
      */
     /**
+     * The collection of products
+     *
      * @var ProductCollection
      */
     protected $products;
@@ -24,12 +26,23 @@ class Cart implements CartInterface
      */
     public function __construct()
     {
+        $this->products = new ProductCollection;
     }
 
     /* ------------------------------------------------------------------------------------------------
      |  Main Functions
      | ------------------------------------------------------------------------------------------------
      */
+    /**
+     * Get all products
+     *
+     * @return ProductCollection
+     */
+    public function allProducts()
+    {
+        return $this->products;
+    }
+
     /**
      * Get a product
      *
@@ -72,6 +85,12 @@ class Cart implements CartInterface
         return $this->add(new Product($attributes));
     }
 
+    /**
+     * @param  string  $hashedId
+     * @param  Product $product
+     *
+     * @return self
+     */
     public function update($hashedId, Product $product)
     {
         // TODO: Add checks
@@ -103,15 +122,22 @@ class Cart implements CartInterface
         return $this;
     }
 
+    public function removeProduct($hashedId)
+    {
+        $this->products->deleteProduct($hashedId);
+
+        return $this;
+    }
+
     /**
      * Check if a product exists in the collection
      *
-     * @param  string $id
+     * @param  string $hashedId
      *
      * @return bool
      */
-    public function hasProduct($id)
+    public function hasProduct($hashedId)
     {
-        return $this->products->has($id);
+        return $this->products->has($hashedId);
     }
 }
