@@ -1,7 +1,6 @@
 <?php namespace Arcanedev\Cartify\Entities;
 
 use Arcanedev\Cartify\Contracts\CartInterface;
-use Arcanedev\Cartify\Contracts\ProductInterface;
 use Arcanedev\Cartify\Exceptions\ProductNotFoundException;
 
 /**
@@ -25,12 +24,18 @@ class Cart implements CartInterface
      */
     public function __construct()
     {
-        // TODO: Implement __construct() method.
     }
 
     /* ------------------------------------------------------------------------------------------------
      |  Main Functions
      | ------------------------------------------------------------------------------------------------
+     */
+    /**
+     * Get a product
+     *
+     * @param  $id
+     *
+     * @return Product|null
      */
     public function getProduct($id)
     {
@@ -41,18 +46,50 @@ class Cart implements CartInterface
         return null;
     }
 
-    public function add(ProductInterface $product)
+    /**
+     * Add a product
+     *
+     * @param Product $product
+     *
+     * @return self
+     */
+    public function add(Product $product)
     {
         $this->products->put($product->id, $product);
 
         return $this;
     }
 
+    /**
+     * Add a product
+     *
+     * @param  array $attributes
+     *
+     * @return self
+     */
     public function addProduct(array $attributes)
     {
-        return $this->addProduct(new Product($attributes));
+        return $this->add(new Product($attributes));
     }
 
+    public function update($hashedId, Product $product)
+    {
+        // TODO: Add checks
+        $this->products->put($hashedId, $product);
+
+        return $this;
+    }
+
+    /**
+     * Update a product
+     *
+     * @param  string $id
+     * @param  array  $attributes
+     *
+     * @throws ProductNotFoundException
+     *
+     * @return self
+     */
     public function updateProduct($id, array $attributes)
     {
         if ( ! $this->hasProduct($id)) {
@@ -67,6 +104,8 @@ class Cart implements CartInterface
     }
 
     /**
+     * Check if a product exists in the collection
+     *
      * @param  string $id
      *
      * @return bool
