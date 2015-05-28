@@ -1,7 +1,9 @@
 <?php namespace Arcanedev\Cartify;
 
+use Arcanedev\Cartify\Contracts\CartInterface;
 use Arcanedev\Cartify\Contracts\EventHandler;
 use Arcanedev\Cartify\Contracts\SessionHandler;
+use Arcanedev\Cartify\Entities\Cart;
 use Arcanedev\Cartify\Entities\CartCollection;
 use Arcanedev\Cartify\Entities\Product;
 use Arcanedev\Cartify\Entities\ProductCollection;
@@ -299,6 +301,7 @@ class Cartify
      * Search if the cart has a item
      *
      * @param  array  $search  An array with the item ID and optional options
+     *
      * @return array|boolean
      */
     public function search(array $search)
@@ -307,10 +310,11 @@ class Cartify
             return false;
         }
 
-        foreach($this->getContent() as $item) {
-            $found = $item->search($search);
+        $rows = [];
 
-            if ($found) {
+        foreach($this->getContent() as $item) {
+            /** @var CartInterface $item */
+            if ($item->search($search)) {
                 $rows[] = $item->rowid;
             }
         }
@@ -321,11 +325,11 @@ class Cartify
     /**
      * Add row to the cart
      *
-     * @param string $id      Unique ID of the item
-     * @param string $name    Name of the item
-     * @param int    $qty     Item qty to add to the cart
-     * @param float  $price   Price of one item
-     * @param array  $options Array of additional options, such as 'size' or 'color'
+     * @param  string $id      Unique ID of the item
+     * @param  string $name    Name of the item
+     * @param  int    $qty     Item qty to add to the cart
+     * @param  float  $price   Price of one item
+     * @param  array  $options Array of additional options, such as 'size' or 'color'
      *
      * @throws InvalidPriceException
      * @throws InvalidProductException
@@ -348,10 +352,10 @@ class Cartify
         }
 
         $cart  = $this->getContent();
-        $rowId = $this->generateRowId($id, $options);
+        $rowId = hash_id($id, $options);
 
         if ($cart->has($rowId)) {
-            $row = $cart->get($rowId);
+            $row  = $cart->get($rowId);
             $cart = $this->updateRow($rowId, ['qty' => $row->qty + $qty]);
         }
         else {
@@ -362,29 +366,15 @@ class Cartify
     }
 
     /**
-     * Generate a unique id for the new row
-     *
-     * @param  string  $id       Unique ID of the item
-     * @param  array   $options  Array of additional options, such as 'size' or 'color'
-     * @return boolean
-     */
-    protected function generateRowId($id, $options)
-    {
-        ksort($options);
-
-        return md5($id . serialize($options));
-    }
-
-    /**
      * Check if a rowid exists in the current cart instance
      *
      * @param  string  $id  Unique ID of the item
      *
      * @return boolean
      */
-    protected function hasRowId($rowId)
+    protected function hasRowId($id)
     {
-        return $this->getContent()->has($rowId);
+        return $this->getContent()->has($id);
     }
 
     /**
