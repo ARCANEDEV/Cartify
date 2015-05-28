@@ -23,7 +23,8 @@
     "autoload": {
         "psr-4": {
             "Arcanedev\\Cartify\\": "src/"
-        }
+        },
+        "files": ["helpers.php"]
     },
     "autoload-dev": {
         "psr-4": {
