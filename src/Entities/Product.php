@@ -383,6 +383,20 @@ class Product implements ProductInterface
         return new self(compact('id', 'name', 'qty', 'price', 'vat', 'options'));
     }
 
+    /**
+     * @param $attributes
+     *
+     * @return bool
+     */
+    public function search(array $attributes)
+    {
+        return true;
+    }
+
+    public function update(array $attributes)
+    {
+    }
+
     /* ------------------------------------------------------------------------------------------------
      |  Check Functions
      | ------------------------------------------------------------------------------------------------

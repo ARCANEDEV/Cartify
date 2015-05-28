@@ -1,8 +1,7 @@
 <?php namespace Arcanedev\Cartify\Entities;
 
-use Arcanedev\Cartify\Contracts\ProductInterface;
-use Arcanedev\Cartify\Contracts\ProductOptionsInterface;
 use Arcanedev\Cartify\Bases\Collection;
+use Arcanedev\Cartify\Contracts\ProductOptionsInterface;
 
 /**
  * Class ProductCollection
@@ -14,8 +13,74 @@ class ProductCollection extends Collection implements ProductOptionsInterface
      |  Main Functions
      | ------------------------------------------------------------------------------------------------
      */
-    public function push(ProductInterface $product)
+    /**
+     * Get a product from the collection by hashed id.
+     *
+     * @param  mixed  $key
+     * @param  mixed  $default
+     *
+     * @return Product|null
+     */
+    public function get($key, $default = null)
     {
-        $this->put($product->getId(), $product);
+        return parent::get($key, $default);
+    }
+
+    /**
+     * Add a product
+     *
+     * @param Product $newProduct
+     *
+     * @return self
+     */
+    public function add(Product $newProduct)
+    {
+        if ($this->has($newProduct->id)) {
+            $newProduct->qty += $this->get($newProduct->id)->qty;
+        }
+
+        $this->put($newProduct->id, $newProduct);
+
+        return $this;
+    }
+
+    /**
+     * Add a new product to collection
+     *
+     * @param  array $attribute
+     *
+     * @return self
+     */
+    public function addProduct(array $attribute)
+    {
+        return $this->add(new Product($attribute));
+    }
+
+    /**
+     * Delete a product form collection by id
+     *
+     * @param  string $id
+     *
+     * @return self
+     */
+    public function deleteProduct($id)
+    {
+        if ($this->has($id)) {
+            $this->forget($id);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Delete a product from collection
+     *
+     * @param  Product $product
+     *
+     * @return self
+     */
+    public function delete(Product $product)
+    {
+        return $this->deleteProduct($product->id);
     }
 }
