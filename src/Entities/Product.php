@@ -93,11 +93,10 @@ class Product implements ProductInterface
 
     /**
      * Optional attributes
-     * @todo: merge other attributes to options
      *
      * @var array
      */
-    // private $optional = ['vat', 'options'];
+    private $optional = ['vat', 'options'];
 
     /* ------------------------------------------------------------------------------------------------
      |  Constructor
@@ -154,7 +153,23 @@ class Product implements ProductInterface
         $this->setQty($attributes['qty']);
         $this->setPrice($attributes['price']);
         $this->setVat($attributes['vat']);
-        $this->setOptions($attributes['options']);
+        $this->loadOptionalAttributes($attributes);
+    }
+
+    /**
+     * Load optional attributes
+     *
+     * @param array $attributes
+     */
+    private function loadOptionalAttributes(array $attributes)
+    {
+        $this->setOptions(array_merge(
+            array_diff_key($attributes, array_merge(
+                array_flip($this->required),
+                array_flip($this->optional)
+            )),
+            $attributes['options']
+        ));
     }
 
     /* ------------------------------------------------------------------------------------------------

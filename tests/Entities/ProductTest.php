@@ -82,6 +82,17 @@ class ProductTest extends TestCase
     }
 
     /** @test */
+    public function it_can_create_product_with_optional_attributes()
+    {
+        // Create
+        $productData = $this->getRandomProductData();
+        $productData['isbn10'] = $this->faker->isbn10;
+
+        // Assert
+        $this->makeAndAssertProduct($productData);
+    }
+
+    /** @test */
     public function it_can_get_product_attribute()
     {
         $productData = $this->makeAndGetProduct();
@@ -343,7 +354,14 @@ class ProductTest extends TestCase
             $vat = 0;
         }
 
-        $this->product  = new Product($data);
+        $this->product   = new Product($data);
+        $data['options'] = $options = array_merge(
+            array_diff_key($data, array_merge(
+                array_flip(['id', 'name', 'qty', 'price']),
+                array_flip(['vat', 'options'])
+            )),
+            $options
+        );
         $hashedId       = $this->hashId($id, $options);
         $total          = $qty * $price;
         $vatPrice       = $total * ($vat / 100);
