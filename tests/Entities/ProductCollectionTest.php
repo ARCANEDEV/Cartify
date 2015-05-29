@@ -66,8 +66,36 @@ class ProductCollectionTest extends TestCase
             $qty += $product->qty;
             $this->products->add($product);
             $this->assertCount(1, $this->products);
-            $this->assertEquals($qty, $this->products->get($product->id)->qty);
+            $this->assertEquals($qty, $this->products->get($product->hashedId)->qty);
         }
+    }
+
+    /** @test */
+    public function it_can_update_one_product()
+    {
+        $product = $this->makeRandomProduct();
+        $this->products->add($product);
+
+        $this->assertCount(1, $this->products);
+        $hashedId = $this->products->first()->hashedId;
+
+        $updatedData = [
+            'name'      => 'Awesome Product',
+            'qty'       => 10,
+            'options'   => [
+                'size'      => 'small',
+                'isbn10'    => $this->faker->isbn13
+            ]
+        ];
+
+        $this->products->updateProduct($hashedId, $updatedData);
+        $this->assertCount(1, $this->products);
+        $product = $this->products->first();
+
+        $this->assertEquals($updatedData['name'],               $product->name);
+        $this->assertEquals($updatedData['qty'],                $product->qty);
+        $this->assertEquals($updatedData['options']['size'],    $product->size);
+        $this->assertEquals($updatedData['options']['isbn10'],  $product->isbn10);
     }
 
     /** @test */
@@ -85,7 +113,7 @@ class ProductCollectionTest extends TestCase
         $this->assertCount(1, $this->products);
 
         $product = $this->products->first();
-        $this->products->deleteProduct($product->id);
+        $this->products->deleteProduct($product->hashedId);
         $this->assertCount(0, $this->products);
     }
 }
