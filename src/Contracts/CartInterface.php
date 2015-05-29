@@ -16,16 +16,16 @@ interface CartInterface
      *
      * @return ProductCollection
      */
-    public function allProducts();
+    public function all();
 
     /**
      * Get a product
      *
-     * @param  $id
+     * @param  $hashedId
      *
      * @return Product|null
      */
-    public function getProduct($id);
+    public function get($hashedId);
 
     /**
      * Add a product
@@ -56,14 +56,14 @@ interface CartInterface
     /**
      * Update a product
      *
-     * @param  string $id
+     * @param  string $hashedId
      * @param  array  $attributes
      *
      * @throws ProductNotFoundException
      *
      * @return Cart
      */
-    public function updateProduct($id, array $attributes);
+    public function updateProduct($hashedId, array $attributes);
 
     /**
      * Check if a product exists in the collection

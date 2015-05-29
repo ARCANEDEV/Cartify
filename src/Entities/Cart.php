@@ -2,17 +2,25 @@
 
 use Arcanedev\Cartify\Contracts\CartInterface;
 use Arcanedev\Cartify\Exceptions\ProductNotFoundException;
+use Countable;
 
 /**
  * Class Cart
  * @package Arcanedev\Cartify\Entities
  */
-class Cart implements CartInterface
+class Cart implements CartInterface, Countable
 {
     /* ------------------------------------------------------------------------------------------------
      |  Properties
      | ------------------------------------------------------------------------------------------------
      */
+    /**
+     * Cart instance
+     *
+     * @var string
+     */
+    protected $instance = 'main';
+
     /**
      * The collection of products
      *
@@ -24,9 +32,39 @@ class Cart implements CartInterface
      |  Constructor
      | ------------------------------------------------------------------------------------------------
      */
-    public function __construct()
+    /**
+     * Constructor
+     *
+     * @param string $instance
+     */
+    public function __construct($instance = 'main')
     {
+        $this->setInstance($instance);
+
         $this->products = new ProductCollection;
+    }
+
+    /* ------------------------------------------------------------------------------------------------
+     |  Getters & Setters
+     | ------------------------------------------------------------------------------------------------
+     */
+    public function instance()
+    {
+        return $this->instance;
+    }
+
+    /**
+     * Set cart instance
+     *
+     * @param  string $instance
+     *
+     * @return self
+     */
+    protected function setInstance($instance)
+    {
+        $this->instance = $instance;
+
+        return $this;
     }
 
     /* ------------------------------------------------------------------------------------------------
@@ -38,25 +76,9 @@ class Cart implements CartInterface
      *
      * @return ProductCollection
      */
-    public function allProducts()
+    public function all()
     {
         return $this->products;
-    }
-
-    /**
-     * Get a product
-     *
-     * @param  $id
-     *
-     * @return Product|null
-     */
-    public function getProduct($id)
-    {
-        if ($this->products->has($id)) {
-            return $this->products->get($id);
-        }
-
-        return null;
     }
 
     /**
@@ -68,7 +90,7 @@ class Cart implements CartInterface
      */
     public function add(Product $product)
     {
-        $this->products->put($product->id, $product);
+        $this->products->put($product->getHashedId(), $product);
 
         return $this;
     }
@@ -86,6 +108,23 @@ class Cart implements CartInterface
     }
 
     /**
+     * Get a product
+     *
+     * @param  $hashedId
+     *
+     * @return Product|null
+     */
+    public function get($hashedId)
+    {
+        // TODO: Add hashedId check
+        if ($this->products->has($hashedId)) {
+            return $this->products->get($hashedId);
+        }
+
+        return null;
+    }
+
+    /**
      * @param  string  $hashedId
      * @param  Product $product
      *
@@ -93,8 +132,7 @@ class Cart implements CartInterface
      */
     public function update($hashedId, Product $product)
     {
-        // TODO: Add checks
-        $this->products->put($hashedId, $product);
+        $this->updateProduct($hashedId, $product->toArray());
 
         return $this;
     }
@@ -102,28 +140,34 @@ class Cart implements CartInterface
     /**
      * Update a product
      *
-     * @param  string $id
+     * @param  string $hashedId
      * @param  array  $attributes
      *
      * @throws ProductNotFoundException
      *
      * @return self
      */
-    public function updateProduct($id, array $attributes)
+    public function updateProduct($hashedId, array $attributes)
     {
-        if ( ! $this->hasProduct($id)) {
-            throw new ProductNotFoundException('Product not found !');
-        }
-
-        /** @var Product $product */
-        $product = $this->products->get($id);
-        $product->update($attributes);
+        $this->findOrFail($hashedId);
+        $this->products->updateProduct($hashedId, $attributes);
 
         return $this;
     }
 
-    public function removeProduct($hashedId)
+    /**
+     * Delete a product
+     *
+     * @param  string $hashedId
+     *
+     * @throws ProductNotFoundException
+     *
+     * @return self
+     */
+    public function delete($hashedId)
     {
+        $this->findOrFail($hashedId);
+
         $this->products->deleteProduct($hashedId);
 
         return $this;
@@ -139,5 +183,53 @@ class Cart implements CartInterface
     public function hasProduct($hashedId)
     {
         return $this->products->has($hashedId);
+    }
+
+    /**
+     * Get product count
+     *
+     * @return int
+     */
+    public function count()
+    {
+        return $this->products->count();
+    }
+
+    /**
+     * Delete all products
+     *
+     * @return $this
+     */
+    public function clear()
+    {
+        if ( ! $this->products->isEmpty()) {
+            $this->products->clear();
+        }
+
+        return $this;
+    }
+
+    /**
+     * Find a product or fail
+     *
+     * @param  string $hashedId
+     *
+     * @throws ProductNotFoundException
+     */
+    private function findOrFail($hashedId)
+    {
+        if ( ! $this->hasProduct($hashedId)) {
+            throw new ProductNotFoundException('Product not found !');
+        }
+    }
+
+    /**
+     * Get first product
+     *
+     * @return Product|null
+     */
+    public function first()
+    {
+        return $this->products->first();
     }
 }
