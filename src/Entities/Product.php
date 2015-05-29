@@ -1,5 +1,6 @@
 <?php namespace Arcanedev\Cartify\Entities;
 
+use Arcanedev\Cartify\Contracts\Arrayable;
 use Arcanedev\Cartify\Contracts\ProductInterface;
 use Arcanedev\Cartify\Exceptions\InvalidPriceException;
 use Arcanedev\Cartify\Exceptions\InvalidProductException;
@@ -23,7 +24,7 @@ use Arcanedev\Cartify\Traits\CheckerTrait;
  * @property double         totalPrice
  * @property ProductOptions options
  */
-class Product implements ProductInterface
+class Product implements ProductInterface, Arrayable
 {
     /* ------------------------------------------------------------------------------------------------
      |  Traits
@@ -439,9 +440,24 @@ class Product implements ProductInterface
             }
         }
 
-
-
         return $this;
+    }
+
+    /**
+     * Get the collection of items as a plain array.
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        return [
+            'id'        => $this->getId(),
+            'name'      => $this->getName(),
+            'qty'       => $this->getQty(),
+            'price'     => $this->getPrice(),
+            'vat'       => $this->getVat(),
+            'options'   => $this->getOptions()->toArray(),
+        ];
     }
 
     /* ------------------------------------------------------------------------------------------------
