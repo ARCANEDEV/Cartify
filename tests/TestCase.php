@@ -55,6 +55,7 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
             'name'      => $this->faker->sentence(3),
             'qty'       => $this->faker->numberBetween(1, 25),
             'price'     => $this->faker->randomFloat(null, 1, 2000),
+            'vat'       => $this->getRandomVAT(),
             'options'   => $withOptions ? $this->getRandomOptions() : [],
         ];
 
