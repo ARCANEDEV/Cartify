@@ -55,9 +55,7 @@ class ProductTest extends TestCase
     public function it_can_create_product()
     {
         // Create
-        list($id, $name, $qty, $price, $options) = $this->getRandomProductData(true);
-
-        $vat            = $vat = $this->getRandomVAT();
+        list($id, $name, $qty, $price, $vat, $options) = $this->getRandomProductData(true);
 
         // Then
         $this->product  = Product::create($id, $name, $qty, $price, $vat, $options);
@@ -93,15 +91,33 @@ class ProductTest extends TestCase
     }
 
     /** @test */
+    public function it_can_create_product_and_fill_optional_attribute()
+    {
+        list($id, $name, $qty, $price) = $this->getRandomProductData(true);
+
+        $this->product = new Product(compact('id', 'name', 'qty', 'price'));
+
+        $this->assertEquals(0,  $this->product->vat);
+        $this->assertEquals([], $this->product->options->toArray());
+    }
+
+    /** @test */
+    public function it_can_convert_product_to_array()
+    {
+        $productData = $this->getRandomProductData();
+        $this->product = new Product($productData);
+        $this->assertEquals($productData, $this->product->toArray());
+    }
+
+    /** @test */
     public function it_can_get_product_attribute()
     {
         $productData = $this->makeAndGetProduct();
 
         // TODO: Refactor Calculations
-        $vat        = 0;
         $hashedId   = $this->hashId($productData['id'], $productData['options']);
         $total      = $productData['qty'] * $productData['price'];
-        $vatPrice   = $total * ($vat / 100);
+        $vatPrice   = $total * ($productData['vat'] / 100);
         $options    = $productData['options'];
 
         $this->assertEquals($productData['id'],     $this->product->id);
@@ -109,7 +125,7 @@ class ProductTest extends TestCase
         $this->assertEquals($productData['name'],   $this->product->name);
         $this->assertEquals($productData['qty'],    $this->product->qty);
         $this->assertEquals($productData['price'],  $this->product->price);
-        $this->assertEquals($vat,                   $this->product->vat);
+        $this->assertEquals($productData['vat'],    $this->product->vat);
         $this->assertEquals($total,                 $this->product->total);
         $this->assertEquals($vatPrice,              $this->product->vatPrice);
         $this->assertEquals($total + $vatPrice,     $this->product->totalPrice);
@@ -339,20 +355,14 @@ class ProductTest extends TestCase
      *
      * @param array $data
      */
-    private function makeAndAssertProduct(array $data, $withVat = false)
+    private function makeAndAssertProduct(array $data)
     {
         // Create
         if ( ! isset($data['options'])) {
             $data['options'] = [];
         }
 
-        list($id, $name, $qty, $price, $options) = array_values($data);
-
-        if ($withVat) {
-            $data['vat'] = $vat = $this->getRandomVAT();
-        } else {
-            $vat = 0;
-        }
+        list($id, $name, $qty, $price, $vat, $options) = array_values($data);
 
         $this->product   = new Product($data);
         $data['options'] = $options = array_merge(
