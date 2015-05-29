@@ -68,7 +68,8 @@ class ProductTest extends TestCase
 
         // Assert
         $this->assertInstanceOf(self::PRODUCT_CLASS, $this->product);
-        $this->assertEquals($hashedId,      $this->product->getId());
+        $this->assertEquals($hashedId,      $this->product->getHashedId());
+        $this->assertEquals($id,            $this->product->getId());
         $this->assertEquals($name,          $this->product->getName());
         $this->assertEquals($qty,           $this->product->getQty());
         $this->assertEquals($price,         $this->product->getPrice());
@@ -92,7 +93,8 @@ class ProductTest extends TestCase
         $vatPrice   = $total * ($vat / 100);
         $options    = $productData['options'];
 
-        $this->assertEquals($hashedId,              $this->product->id);
+        $this->assertEquals($productData['id'],     $this->product->id);
+        $this->assertEquals($hashedId,              $this->product->hashedId);
         $this->assertEquals($productData['name'],   $this->product->name);
         $this->assertEquals($productData['qty'],    $this->product->qty);
         $this->assertEquals($productData['price'],  $this->product->price);
@@ -128,8 +130,22 @@ class ProductTest extends TestCase
     public function it_can_update_product()
     {
         $productData = $this->makeAndGetProduct();
+        $updatedData = [
+            'name'      => 'Awesome Product',
+            'qty'       => 10,
+            'options'   => array_merge($productData['options'], [
+                'size'      => 'small',
+                'isbn10'    => $this->faker->isbn13
+            ]),
+        ];
+        $productData = array_merge($productData, $updatedData);
 
-        // dd($this->product->id);
+        $this->product->update($updatedData);
+
+        $this->assertEquals($productData['name'], $this->product->name);
+        $this->assertEquals($productData['qty'], $this->product->qty);
+        $this->assertEquals($productData['options']['size'], $this->product->size);
+        $this->assertEquals($productData['options']['isbn10'], $this->product->isbn10);
     }
 
     /**
@@ -335,7 +351,8 @@ class ProductTest extends TestCase
 
         // Assert
         $this->assertInstanceOf(self::PRODUCT_CLASS, $this->product);
-        $this->assertEquals($hashedId,              $this->product->getId());
+        $this->assertEquals($hashedId,              $this->product->getHashedId());
+        $this->assertEquals($id,                    $this->product->getId());
         $this->assertEquals($name,                  $this->product->getName());
         $this->assertEquals($qty,                   $this->product->getQty());
         $this->assertEquals($price,                 $this->product->getPrice());

@@ -12,6 +12,7 @@ use Arcanedev\Cartify\Traits\CheckerTrait;
  * Class Product
  * @package Arcanedev\Cartify\Entities
  *
+ * @property string         hashedId
  * @property string         id
  * @property string         name
  * @property int            qty
@@ -34,6 +35,13 @@ class Product implements ProductInterface
      |  Properties
      | ------------------------------------------------------------------------------------------------
      */
+    /**
+     * Hashed Id
+     *
+     * @var string
+     */
+    protected $propHashedId;
+
     /**
      * Id
      *
@@ -108,6 +116,7 @@ class Product implements ProductInterface
             throw new InvalidProductException('The product attributes is empty');
         }
 
+        $this->propOptions = new ProductOptions;
         $this->load($attributes);
     }
 
@@ -140,12 +149,12 @@ class Product implements ProductInterface
      */
     private function setAttributes(array $attributes)
     {
-        $this->setOptions($attributes['options']);
         $this->setId($attributes['id']);
         $this->setName($attributes['name']);
         $this->setQty($attributes['qty']);
         $this->setPrice($attributes['price']);
         $this->setVat($attributes['vat']);
+        $this->setOptions($attributes['options']);
     }
 
     /* ------------------------------------------------------------------------------------------------
@@ -184,7 +193,16 @@ class Product implements ProductInterface
     }
 
     /**
-     * Get product id
+     * Get Hashed ID
+     * @return string
+     */
+    public function getHashedId()
+    {
+        return $this->propHashedId;
+    }
+
+    /**
+     * Get product ID
      *
      * @return string
      */
@@ -203,7 +221,9 @@ class Product implements ProductInterface
     public function setId($id)
     {
         $this->checkId($id);
-        $this->propId = hash_id($id, $this->propOptions->toArray());
+        $this->propId = $id;
+
+        $this->generateHashedID();
 
         return $this;
     }
@@ -359,6 +379,8 @@ class Product implements ProductInterface
     {
         $this->propOptions = new ProductOptions($options);
 
+        $this->generateHashedID();
+
         return $this;
     }
 
@@ -384,30 +406,25 @@ class Product implements ProductInterface
     }
 
     /**
-     * @param $attributes
+     * Update product
      *
-     * @return bool
+     * @param  array $attributes
+     *
+     * @return self
      */
-    public function search(array $attributes)
-    {
-        return true;
-    }
-
     public function update(array $attributes)
     {
         foreach($attributes as $key => $value) {
             if ($key == 'options') {
                 $options = $this->options->merge($value);
-                $this->put($key, $options);
+                $this->setOptions($options->toArray());
             }
             else {
-                $this->put($key, $value);
+                $this->__set($key, $value);
             }
         }
 
-        if ( ! is_null(array_keys($attributes, ['qty', 'price']))) {
-            $this->put('subtotal', $this->qty * $this->price);
-        }
+
 
         return $this;
     }
@@ -557,6 +574,16 @@ class Product implements ProductInterface
      |  Other Functions
      | ------------------------------------------------------------------------------------------------
      */
+    /**
+     * Generate hashed ID
+     *
+     * @return self
+     */
+    private function generateHashedID()
+    {
+        $this->propHashedId = hash_id($this->propId, $this->propOptions->toArray());
+    }
+
     /**
      * Fill optional attributes
      *

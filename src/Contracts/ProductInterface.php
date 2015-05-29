@@ -154,4 +154,13 @@ interface ProductInterface
      * @return ProductInterface
      */
     public static function create($id, $name, $qty, $price, $vat = 0.0, array $options = []);
+
+    /**
+     * Update product
+     *
+     * @param  array $attributes
+     *
+     * @return self
+     */
+    public function update(array $attributes);
 }
