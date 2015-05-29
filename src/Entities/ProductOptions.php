@@ -1,12 +1,13 @@
 <?php namespace Arcanedev\Cartify\Entities;
 
 use Arcanedev\Cartify\Bases\Collection;
+use Arcanedev\Cartify\Contracts\Arrayable;
 
 /**
  * Class ProductOptions
  * @package Arcanedev\Cartify\Entities
  */
-class ProductOptions extends Collection
+class ProductOptions extends Collection implements Arrayable
 {
     /* ------------------------------------------------------------------------------------------------
      |  Properties
