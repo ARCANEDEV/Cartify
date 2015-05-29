@@ -46,7 +46,7 @@ class ProductCollectionTest extends TestCase
     }
 
     /** @test */
-    public function it_can_add_products()
+    public function it_can_add_products_and_delete_all()
     {
         $this->assertCount(0, $this->products);
 
@@ -54,6 +54,10 @@ class ProductCollectionTest extends TestCase
             $this->products->add($this->makeRandomProduct());
             $this->assertCount($i, $this->products);
         }
+
+        $this->products->clear();
+
+        $this->assertCount(0, $this->products);
     }
 
     /** @test */

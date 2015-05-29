@@ -1,6 +1,7 @@
 <?php namespace Arcanedev\Cartify\Entities;
 
 use Arcanedev\Cartify\Bases\Collection;
+use Arcanedev\Cartify\Contracts\Arrayable;
 use Arcanedev\Cartify\Contracts\ProductOptionsInterface;
 use Closure;
 
@@ -8,7 +9,7 @@ use Closure;
  * Class ProductCollection
  * @package Arcanedev\Cartify\Entities
  */
-class ProductCollection extends Collection implements ProductOptionsInterface
+class ProductCollection extends Collection implements ProductOptionsInterface, Arrayable
 {
     /* ------------------------------------------------------------------------------------------------
      |  Main Functions
@@ -118,5 +119,17 @@ class ProductCollection extends Collection implements ProductOptionsInterface
     public function delete(Product $product)
     {
         return $this->deleteProduct($product->hashedId);
+    }
+
+    /**
+     * Delete all products
+     */
+    public function clear()
+    {
+        if ( ! $this->isEmpty()) {
+            $this->items = [];
+        }
+
+        return $this;
     }
 }
