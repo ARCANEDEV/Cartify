@@ -206,7 +206,7 @@ class Cartify implements CartifyInterface
         $hashedId = hash_id($id, $options);
 
         if ($cart->hasProduct($hashedId)) {
-            $product = $cart->getProduct($hashedId);
+            $product = $cart->get($hashedId);
             $cart    = $this->updateRow($hashedId, ['qty' => $product->qty + $qty]);
         }
         else {
@@ -279,7 +279,7 @@ class Cartify implements CartifyInterface
         $cart = $this->getContent();
 
         return $cart->hasProduct($hashedId)
-            ? $cart->getProduct($hashedId)
+            ? $cart->get($hashedId)
             : null;
     }
 
@@ -316,7 +316,7 @@ class Cartify implements CartifyInterface
      */
     public function total()
     {
-        $products = $this->getContent()->allProducts();
+        $products = $this->getContent()->all();
 
         if ($products->isEmpty()) {
             return 0;
@@ -345,13 +345,13 @@ class Cartify implements CartifyInterface
         $cart = $this->getContent();
 
         if ( ! $totalItems) {
-            return $cart->allProducts()->count();
+            return $cart->count();
         }
 
         $count = 0;
 
         // TODO: replace by sum method
-        foreach($cart->allProducts() as $product) {
+        foreach($cart->all() as $product) {
             /** @var Product $product */
             $count += $product->qty;
         }
@@ -374,7 +374,7 @@ class Cartify implements CartifyInterface
 
         $rows = [];
 
-        foreach($this->getContent()->allProducts() as $product) {
+        foreach($this->getContent()->all() as $product) {
             /** @var Product $product */
             if ($product->search($attributes)) {
                 $rows[] = $product->id;
@@ -431,7 +431,7 @@ class Cartify implements CartifyInterface
     protected function updateRow($hashedId, $attributes)
     {
         $cart    = $this->getContent();
-        $product = $cart->getProduct($hashedId);
+        $product = $cart->get($hashedId);
 
         $cart->update($hashedId, $product->update($attributes));
 
