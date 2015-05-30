@@ -167,6 +167,11 @@ class Cartify implements CartifyInterface, Countable
         $this->fireEvent('batched', $items);
     }
 
+    /**
+     * Add a product to the cart
+     *
+     * @param array $attributes
+     */
     private function addOne(array $attributes)
     {
         $options = array_get($attributes, 'options', []);
