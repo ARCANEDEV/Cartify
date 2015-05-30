@@ -262,6 +262,9 @@ class ProductTest extends TestCase
             ],[
                 'value'     => 0,
                 'message'   => 'These attributes are missing or empty: qty.'
+            ],[
+                'value'     => -1,
+                'message'   => 'The product quantity must be an integer and greater than 0.'
             ]
         ];
 
