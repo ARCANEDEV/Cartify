@@ -7,7 +7,6 @@ use Arcanedev\Cartify\Entities\Cart;
 use Arcanedev\Cartify\Entities\CartCollection;
 use Arcanedev\Cartify\Entities\Product;
 use Arcanedev\Cartify\Entities\ProductCollection;
-use Arcanedev\Cartify\Exceptions\CartNotFoundException;
 use Arcanedev\Cartify\Exceptions\InvalidCartInstanceException;
 use Arcanedev\Cartify\Exceptions\InvalidPriceException;
 use Arcanedev\Cartify\Exceptions\InvalidProductException;
@@ -97,7 +96,7 @@ class Cartify implements CartifyInterface, Countable
      *
      * @throws InvalidCartInstanceException
      *
-     * @return self
+     * @return Cartify
      */
     public function instance($instance = null)
     {
@@ -137,7 +136,7 @@ class Cartify implements CartifyInterface, Countable
             $options = array_get($id, 'options', []);
 
             $this->fireEvent('add', array_merge($id, compact('options')));
-            $result = $this->addProduct($id['id'], $id['name'], $id['qty'], $id['price'], $options);
+            $this->addProduct($id['id'], $id['name'], $id['qty'], $id['price'], $options);
             $this->fireEvent('added', array_merge($id, compact('options')));
 
             return $this;
@@ -216,7 +215,7 @@ class Cartify implements CartifyInterface, Countable
      *
      * @throws InvalidProductIDException
      *
-     * @return bool
+     * @return Cart
      */
     public function update($hashedId, $attribute)
     {
@@ -434,7 +433,7 @@ class Cartify implements CartifyInterface, Countable
      * @param  string  $rowId  The ID of the row
      * @param  int     $qty    The qty to add
      *
-     * @return CartCollection
+     * @return Cart
      */
     protected function updateQty($rowId, $qty)
     {
@@ -451,7 +450,7 @@ class Cartify implements CartifyInterface, Countable
      * @param  string  $rowId       The ID of the row
      * @param  array   $attributes  An array of attributes to update
      *
-     * @return CartCollection
+     * @return Cart
      */
     protected function updateAttribute($rowId, $attributes)
     {
