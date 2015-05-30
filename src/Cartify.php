@@ -276,13 +276,11 @@ class Cartify implements CartifyInterface, Countable
     /**
      * Get the cart content
      *
-     * @return Cart|null
+     * @return Cart
      */
     public function content()
     {
-        $cart = $this->getContent();
-
-        return empty($cart) ? null : $cart;
+        return $this->getContent();
     }
 
     /**
@@ -317,11 +315,9 @@ class Cartify implements CartifyInterface, Countable
      */
     protected function getContent()
     {
-        $content = $this->hasSessionCart()
+        return $this->hasSessionCart()
             ? $this->getSessionCart()
             : new Cart;
-
-        return $content;
     }
 
     /**
@@ -431,7 +427,9 @@ class Cartify implements CartifyInterface, Countable
      | ------------------------------------------------------------------------------------------------
      */
     /**
-     * @param $id
+     * Check if has product or throw an exception
+     *
+     * @param string $id
      *
      * @throws InvalidProductIDException
      */
@@ -488,6 +486,8 @@ class Cartify implements CartifyInterface, Countable
     }
 
     /**
+     * Check if has a cart session
+     *
      * @return bool
      */
     private function hasSessionCart()
