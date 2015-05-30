@@ -56,7 +56,7 @@ interface CartifyInterface
      *
      * @throws InvalidProductIDException
      *
-     * @return Cartify
+     * @return Cart
      */
     public function remove($hashedId);
 

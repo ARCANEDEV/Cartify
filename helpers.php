@@ -25,6 +25,6 @@ if ( ! function_exists('is_multi_array')) {
      * @return boolean
      */
     function is_multi_array(array $array) {
-        return is_array(head($array));
+        return is_array(reset($array));
     }
 }

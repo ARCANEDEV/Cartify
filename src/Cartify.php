@@ -239,7 +239,7 @@ class Cartify implements CartifyInterface, Countable
      *
      * @throws InvalidProductIDException
      *
-     * @return self
+     * @return Cart
      */
     public function remove($hashedId)
     {
@@ -253,7 +253,7 @@ class Cartify implements CartifyInterface, Countable
 
         $this->updateCart($cart);
 
-        return $this;
+        return $cart;
     }
 
     /**
@@ -296,93 +296,6 @@ class Cartify implements CartifyInterface, Countable
         $this->fireEvent('destroyed');
 
         return $this;
-    }
-
-    /**
-     * Get the price total
-     *
-     * @return float
-     */
-    public function total()
-    {
-        $products = $this->getContent()->all();
-
-        if ($products->isEmpty()) {
-            return 0;
-        }
-
-        $total = 0;
-
-        // TODO: Replace by sum method
-        foreach($products as $product) {
-            /** @var Product $product */
-            $total += $product->getTotal();
-        }
-
-        return $total;
-    }
-
-    /**
-     * Get the number of items in the cart
-     *
-     * @param  boolean  $totalItems  Get all the items (when false, will return the number of rows)
-     *
-     * @return int
-     */
-    public function count($totalItems = true)
-    {
-        $cart = $this->getContent();
-
-        if ( ! $totalItems) {
-            return $cart->count();
-        }
-
-        $count = 0;
-
-        // TODO: replace by sum method
-        foreach($cart->all() as $product) {
-            /** @var Product $product */
-            $count += $product->qty;
-        }
-
-        return $count;
-    }
-
-    /**
-     * Search if the cart has a item
-     *
-     * @param  array         $attributes  An array with the item ID and optional options
-     *
-     * @return array|boolean
-     */
-    public function search(array $attributes)
-    {
-        if (empty($search)) {
-            return false;
-        }
-
-        $rows = [];
-
-        foreach($this->getContent()->all() as $product) {
-            /** @var Product $product */
-            if ($product->search($attributes)) {
-                $rows[] = $product->id;
-            }
-        }
-
-        return empty($rows) ? false : $rows;
-    }
-
-    /**
-     * Check if a hashed id exists in the current cart instance
-     *
-     * @param  string  $hashedId  Unique ID of the item
-     *
-     * @return boolean
-     */
-    protected function hasProductById($hashedId)
-    {
-        return $this->getContent()->hasProduct($hashedId);
     }
 
     /**
@@ -458,6 +371,60 @@ class Cartify implements CartifyInterface, Countable
     }
 
     /* ------------------------------------------------------------------------------------------------
+     |  Count Functions
+     | ------------------------------------------------------------------------------------------------
+     */
+    /**
+     * Get the price total
+     *
+     * @return float
+     */
+    public function total()
+    {
+        $products = $this->getContent()->all();
+
+        if ($products->isEmpty()) {
+            return 0;
+        }
+
+        $total = 0;
+
+        // TODO: Replace by sum method
+        foreach($products as $product) {
+            /** @var Product $product */
+            $total += $product->getTotal();
+        }
+
+        return $total;
+    }
+
+    /**
+     * Get the number of items in the cart
+     *
+     * @param  boolean  $totalItems  Get all the items (when false, will return the number of rows)
+     *
+     * @return int
+     */
+    public function count($totalItems = true)
+    {
+        $cart = $this->getContent();
+
+        if ( ! $totalItems) {
+            return $cart->count();
+        }
+
+        $count = 0;
+
+        // TODO: replace by sum method
+        foreach($cart->all() as $product) {
+            /** @var Product $product */
+            $count += $product->qty;
+        }
+
+        return $count;
+    }
+
+    /* ------------------------------------------------------------------------------------------------
      |  Check Functions
      | ------------------------------------------------------------------------------------------------
      */
@@ -474,15 +441,15 @@ class Cartify implements CartifyInterface, Countable
     }
 
     /**
-     * Check if the array is a multidimensional array
+     * Check if a hashed id exists in the current cart instance
      *
-     * @param  array   $array  The array to check
+     * @param  string  $hashedId  Unique ID of the item
      *
      * @return boolean
      */
-    protected function isMultiArray(array $array)
+    private function hasProductById($hashedId)
     {
-        return is_array(head($array));
+        return $this->getContent()->hasProduct($hashedId);
     }
 
     /* ------------------------------------------------------------------------------------------------
