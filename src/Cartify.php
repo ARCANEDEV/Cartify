@@ -6,7 +6,6 @@ use Arcanedev\Cartify\Contracts\SessionHandler;
 use Arcanedev\Cartify\Entities\Cart;
 use Arcanedev\Cartify\Entities\CartCollection;
 use Arcanedev\Cartify\Entities\Product;
-use Arcanedev\Cartify\Entities\ProductCollection;
 use Arcanedev\Cartify\Exceptions\InvalidCartInstanceException;
 use Arcanedev\Cartify\Exceptions\InvalidPriceException;
 use Arcanedev\Cartify\Exceptions\InvalidProductException;
