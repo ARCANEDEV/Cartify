@@ -133,12 +133,7 @@ class Cartify implements CartifyInterface, Countable
 
         // And if it's not only an array, but a multidimensional array, we need to
         // recursively call the add function
-        if (is_multi_array($id)) {
-            $this->addMany($id);
-        }
-        else {
-            $this->addOne($id);
-        }
+        is_multi_array($id) ? $this->addMany($id) : $this->addOne($id);
 
         return $this;
     }
