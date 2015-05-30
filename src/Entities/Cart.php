@@ -232,4 +232,18 @@ class Cart implements CartInterface, Countable
     {
         return $this->products->first();
     }
+
+    /* ------------------------------------------------------------------------------------------------
+     |  Check Function
+     | ------------------------------------------------------------------------------------------------
+     */
+    /**
+     * Check cart is empty
+     *
+     * @return bool
+     */
+    public function isEmpty()
+    {
+        return $this->products->isEmpty();
+    }
 }
