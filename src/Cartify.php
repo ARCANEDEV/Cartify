@@ -69,6 +69,7 @@ class Cartify implements CartifyInterface, Countable
     {
         $this->session  = $session;
         $this->event    = $event;
+        $this->carts    = new CartCollection;
     }
 
     /* ------------------------------------------------------------------------------------------------
@@ -275,7 +276,7 @@ class Cartify implements CartifyInterface, Countable
     /**
      * Get the cart content
      *
-     * @return ProductCollection|null
+     * @return Cart|null
      */
     public function content()
     {
@@ -305,6 +306,7 @@ class Cartify implements CartifyInterface, Countable
      */
     protected function updateCart($cart)
     {
+        $this->carts->put($this->getInstance(), $cart);
         $this->updateSessionCart($cart);
     }
 

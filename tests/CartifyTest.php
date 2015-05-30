@@ -51,13 +51,18 @@ class CartifyTest extends TestCase
     public function it_can_be_instantiated()
     {
         $this->assertInstanceOf(self::CARTIFY_CLASS, $this->cartify);
+        $this->assertInstanceOf(self::CARTIFY_CLASS, $this->cartify->instance('main'));
+        $this->assertEquals(0, $this->cartify->total());
     }
 
     /** @test */
     public function it_can_add_one_product_to_cart()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+        ]);
+
         $this->cartify->add('293ad', 'Product 1', 1, 9.99, ['size' => 'large']);
     }
 
@@ -65,27 +70,42 @@ class CartifyTest extends TestCase
     public function it_can_add_many_products_to_cart()
     {
         $times = 10;
-        $this->events->shouldReceive('fire')->times($times)->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->times($times)->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+            'update'    => m::type('string'),
+            'updated'   => m::type('string'),
+            'delete'    => m::type('string'),
+            'deleted'   => m::type('string'),
+        ], $times);
+
         for($i = 1; $i <= $times; $i++) {
             $this->cartify->add('293ad' . $i, 'Product ' . $i, 1, 9.99);
         }
+
         $this->assertEquals($times, $this->cartify->count());
     }
 
     /** @test */
     public function it_can_add_with_numeric_id()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+        ]);
+
         $this->cartify->add(12345, 'Product 1', 1, 9.99, ['size' => 'large']);
     }
 
     /** @test */
     public function it_can_add_array()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+        ]);
+
         $this->cartify->add([
             'id'        => '293ad',
             'name'      => 'Product 1',
@@ -100,8 +120,11 @@ class CartifyTest extends TestCase
     /** @test */
     public function it_can_add_batch()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.batch', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.batched', m::type('array'));
+        $this->registerEvents([
+            'batch'     => m::type('array'),
+            'batched'   => m::type('array'),
+        ]);
+
         $this->cartify->add([
             [
                 'id'        => '293ad',
@@ -124,6 +147,11 @@ class CartifyTest extends TestCase
     /** @test */
     public function it_can_add_multiple_options()
     {
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+        ]);
+
         $data = [
             'id'        => '293ad',
             'name'      => 'Product 1',
@@ -132,9 +160,6 @@ class CartifyTest extends TestCase
             'options'   => ['size' => 'large', 'color' => 'red']
         ];
         list($id, $name, $qty, $price, $options) = array_values($data);
-
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
 
         $this->cartify->add($id, $name, $qty, $price, $options);
         $cart = $this->cartify->get(hash_id($id, $options));
@@ -152,7 +177,7 @@ class CartifyTest extends TestCase
      */
     public function must_throw_exception_on_empty_values()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::any());
+        $this->registerEvents(['add' => m::any()]);
 
         $this->cartify->add('', '', '', '');
     }
@@ -165,7 +190,7 @@ class CartifyTest extends TestCase
      */
     public function must_throw_exception_on_none_numeric_quantity()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::any());
+        $this->registerEvents(['add' => m::any()]);
 
         $this->cartify->add('293ad', 'Product 1', 'im-not-a-number', 9.99);
     }
@@ -178,7 +203,7 @@ class CartifyTest extends TestCase
      */
     public function must_throw_exception_on_none_numeric_price()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::any());
+        $this->registerEvents(['add' => m::any()]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 'im-not-a-number');
     }
@@ -186,50 +211,61 @@ class CartifyTest extends TestCase
     /** @test */
     public function it_can_update_existing_product()
     {
-        $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+        ], 2);
 
         $this->cartify->add('293ad', 'Product 1', 3, 9.99);
         $this->cartify->add('293ad', 'Product 1', 4, 9.99);
+        $cart = $this->cartify->content();
 
-        $this->assertEquals(7, $this->cartify->content()->first()->qty);
+        $this->assertEquals(7, $cart->first()->qty);
     }
 
     /** @test */
     public function it_can_update_quantity()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.update', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.updated', m::type('string'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+            'update'    => m::type('string'),
+            'updated'   => m::type('string'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->update('8cbf215baa3b757e910e5305ab981172', 2);
+        $cart = $this->cartify->content();
 
-        $this->assertEquals(2, $this->cartify->content()->first()->qty);
+        $this->assertEquals(2, $cart->first()->qty);
     }
 
     /** @test */
-    public function testCartCanUpdateItem()
+    public function it_can_update_a_product()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.update', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.updated', m::type('string'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+            'update'    => m::type('string'),
+            'updated'   => m::type('string'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->update('8cbf215baa3b757e910e5305ab981172', ['name' => 'Product 2']);
+        $cart = $this->cartify->content();
 
-        $this->assertEquals('Product 2', $this->cartify->content()->first()->name);
+        $this->assertEquals('Product 2', $cart->first()->name);
     }
 
     /** @test */
-    public function testCartCanUpdateItemToNumericId()
+    public function it_can_update_a_product_to_numeric_id()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.update', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.updated', m::type('string'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+            'update'    => m::type('string'),
+            'updated'   => m::type('string'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->update('8cbf215baa3b757e910e5305ab981172', ['id' => 12345]);
@@ -238,17 +274,26 @@ class CartifyTest extends TestCase
     }
 
     /** @test */
-    public function testCartCanUpdateOptions()
+    public function it_can_update_product_options()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.update', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.updated', m::type('string'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+            'update'    => m::type('string'),
+            'updated'   => m::type('string'),
+        ]);
 
-        $this->cartify->add('293ad', 'Product 1', 1, 9.99, ['size' => 'S']);
-        $this->cartify->update('9be7e69d236ca2d09d2e0838d2c59aeb', ['options' => ['size' => 'L']]);
+        $this->cartify->add('293ad', 'Product 1', 1, 9.99, [
+            'size' => 'S'
+        ]);
+        $this->cartify->update('9be7e69d236ca2d09d2e0838d2c59aeb', [
+            'options' => [
+                'size' => 'L'
+            ]
+        ]);
+        $cart = $this->cartify->content();
 
-        $this->assertEquals('L', $this->cartify->content()->first()->options->size);
+        $this->assertEquals('L', $cart->first()->options->size);
     }
 
     /**
@@ -256,34 +301,39 @@ class CartifyTest extends TestCase
      *
      * @expectedException \Arcanedev\Cartify\Exceptions\InvalidProductIDException
      */
-    public function testCartThrowsExceptionOnInvalidRowId()
+    public function it_must_throws_invalid_product_id_exception()
     {
-        $this->cartify->update('invalidRowId', 1);
+        $this->cartify->update('invalid-id', 1);
     }
 
     /** @test */
-    public function testCartCanRemove()
+    public function it_can_remove_a_product()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.delete', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.deleted', m::type('string'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+            'delete'    => m::type('string'),
+            'deleted'   => m::type('string'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->remove('8cbf215baa3b757e910e5305ab981172');
+        $cart = $this->cartify->content();
 
-        $this->assertTrue($this->cartify->content()->isEmpty());
+        $this->assertTrue($cart->isEmpty());
     }
 
     /** @test */
-    public function testCartCanRemoveOnUpdate()
+    public function it_can_remove_on_update()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.update', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.updated', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.delete', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.deleted', m::type('string'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+            'update'    => m::type('string'),
+            'updated'   => m::type('string'),
+            'delete'    => m::type('string'),
+            'deleted'   => m::type('string'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->update('8cbf215baa3b757e910e5305ab981172', 0);
@@ -292,65 +342,80 @@ class CartifyTest extends TestCase
     }
 
     /** @test */
-    public function testCartCanRemoveOnNegativeUpdate()
+    public function it_can_remove_on_negative_update()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.update', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.updated', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.delete', m::type('string'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.deleted', m::type('string'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+            'update'    => m::type('string'),
+            'updated'   => m::type('string'),
+            'delete'    => m::type('string'),
+            'deleted'   => m::type('string'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->update('8cbf215baa3b757e910e5305ab981172', -1);
 
-        $this->assertTrue($this->cartify->content()->isEmpty());
+        $cart = $this->cartify->content();
+        $this->assertTrue($cart->isEmpty());
     }
 
     /** @test */
-    public function testCartCanGet()
+    public function it_can_get_a_product()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
-        $item = $this->cartify->get('8cbf215baa3b757e910e5305ab981172');
+        $product = $this->cartify->get('8cbf215baa3b757e910e5305ab981172');
 
-        $this->assertEquals('293ad', $item->id);
+        $this->assertEquals('293ad', $product->id);
     }
 
     /** @test */
-    public function testCartCanGetContent()
+    public function it_can_get_content()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
+        $cart = $this->cartify->content();
 
-        $this->assertInstanceOf('Arcanedev\\Cartify\\Entities\\Cart', $this->cartify->content());
-        $this->assertFalse($this->cartify->content()->isEmpty());
+        $this->assertInstanceOf('Arcanedev\\Cartify\\Entities\\Cart', $cart);
+        $this->assertFalse($cart->isEmpty());
+        $this->assertCount(1, $cart);
     }
 
     /** @test */
-    public function testCartCanDestroy()
+    public function it_can_destroy_all()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.destroy', null);
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.destroyed', null);
+        $this->registerEvents([
+            'add'       => m::type('array'),
+            'added'     => m::type('array'),
+            'destroy'   => m::type('null'),
+            'destroyed' => m::type('null'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->destroy();
 
-        $this->assertInstanceOf('Arcanedev\\Cartify\\Entities\\Cart', $this->cartify->content());
-        $this->assertTrue($this->cartify->content()->isEmpty());
+        $cart = $this->cartify->content();
+        $this->assertInstanceOf('Arcanedev\\Cartify\\Entities\\Cart', $cart);
+        $this->assertTrue($cart->isEmpty());
+        $this->assertCount(0, $cart);
     }
 
     /** @test */
-    public function testCartCanGetTotal()
+    public function it_can_get_total()
     {
-        $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'   => m::type('array'),
+            'added' => m::type('array'),
+        ], 2);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->add('986se', 'Product 2', 1, 19.99);
@@ -359,10 +424,12 @@ class CartifyTest extends TestCase
     }
 
     /** @test */
-    public function testCartCanGetItemCount()
+    public function it_can_get_product_count()
     {
-        $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'   => m::type('array'),
+            'added' => m::type('array'),
+        ], 2);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->add('986se', 'Product 2', 2, 19.99);
@@ -373,8 +440,10 @@ class CartifyTest extends TestCase
     /** @test */
     public function testCartCanGetRowCount()
     {
-        $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'   => m::type('array'),
+            'added' => m::type('array'),
+        ], 2);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->add('986se', 'Product 2', 2, 19.99);
@@ -383,88 +452,76 @@ class CartifyTest extends TestCase
     }
 
     /** @test */
-    //public function testCartCanSearch()
-    //{
-    //    $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-    //    $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-    //
-    //    $this->cartify->add('293ad', 'Product 1', 1, 9.99);
-    //    $searchResult = $this->cartify->search(['id' => '293ad']);
-    //
-    //    $this->assertEquals('8cbf215baa3b757e910e5305ab981172', $searchResult[0]);
-    //}
+    public function it_can_have_multiple_instances()
+    {
+        $this->registerEvents([
+            'add'   => m::type('array'),
+            'added' => m::type('array'),
+        ], 2);
 
-    /** @test */
-    //public function testCartCanHaveMultipleInstances()
-    //{
-    //    $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-    //    $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-    //
-    //    $this->cartify->instance('firstInstance')->add('293ad', 'Product 1', 1, 9.99);
-    //    $this->cartify->instance('secondInstance')->add('986se', 'Product 2', 1, 19.99);
-    //
-    //    $this->assertTrue($this->cartify->instance('firstInstance')->content()->has('8cbf215baa3b757e910e5305ab981172'));
-    //    $this->assertFalse($this->cartify->instance('firstInstance')->content()->has('22eae2b9c10083d6631aaa023106871a'));
-    //    $this->assertTrue($this->cartify->instance('secondInstance')->content()->has('22eae2b9c10083d6631aaa023106871a'));
-    //    $this->assertFalse($this->cartify->instance('secondInstance')->content()->has('8cbf215baa3b757e910e5305ab981172'));
-    //}
+        $this->cartify->instance('main')->add('293ad', 'Product 1', 1, 9.99);
+        $this->cartify->instance('whishlist')->add('986se', 'Product 2', 1, 19.99);
 
-    /** @test */
-    //public function testCartCanSearchInMultipleInstances()
-    //{
-    //    $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-    //    $this->events->shouldReceive('fire')->twice()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-    //
-    //    $this->cartify->instance('firstInstance')->add('293ad', 'Product 1', 1, 9.99);
-    //    $this->cartify->instance('secondInstance')->add('986se', 'Product 2', 1, 19.99);
-    //
-    //    $this->assertEquals($this->cartify->instance('firstInstance')->search(['id' => '293ad']), ['8cbf215baa3b757e910e5305ab981172']);
-    //    $this->assertEquals($this->cartify->instance('secondInstance')->search(['id' => '986se']), ['22eae2b9c10083d6631aaa023106871a']);
-    //}
+        $mainCart       = $this->cartify->instance('main')->content();
+        $wishlistCart   = $this->cartify->instance('whishlist')->content();
+
+        $this->assertTrue($mainCart->hasProduct('8cbf215baa3b757e910e5305ab981172'));
+        $this->assertFalse($mainCart->hasProduct('22eae2b9c10083d6631aaa023106871a'));
+        $this->assertTrue($wishlistCart->hasProduct('22eae2b9c10083d6631aaa023106871a'));
+        $this->assertFalse($wishlistCart->hasProduct('8cbf215baa3b757e910e5305ab981172'));
+    }
 
     /**
      * @test
      *
      * @expectedException \Arcanedev\Cartify\Exceptions\InvalidCartInstanceException
      */
-    public function testCartThrowsExceptionOnEmptyInstance()
+    public function it_must_invalid_cart_instance_exception_on_empty_instance()
     {
         $this->cartify->instance();
     }
 
     /** @test */
-    public function testCartReturnsCartCollection()
+    public function it_can_return_cart()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'   => m::type('array'),
+            'added' => m::type('array'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
+        $cart = $this->cartify->content();
 
-        $this->assertInstanceOf('Arcanedev\Cartify\Entities\Cart', $this->cartify->content());
+        $this->assertInstanceOf('Arcanedev\\Cartify\\Entities\\Cart', $cart);
+        $this->assertCount(1, $cart);
     }
 
     /** @test */
-    public function testCartCollectionHasCartRowCollection()
+    public function it_can_get_product_and_product_options()
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
+        $this->registerEvents([
+            'add'   => m::type('array'),
+            'added' => m::type('array'),
+        ]);
 
         $this->cartify->add('293ad', 'Product 1', 1, 9.99);
+        $product = $this->cartify->content()->first();
 
-        $this->assertInstanceOf('Arcanedev\\Cartify\\Entities\\Product', $this->cartify->content()->first());
+        $this->assertInstanceOf('Arcanedev\\Cartify\\Entities\\Product',        $product);
+        $this->assertInstanceOf('Arcanedev\\Cartify\\Entities\\ProductOptions', $product->options);
     }
 
-    /** @test */
-    public function testCartRowCollectionHasCartRowOptionsCollection()
+    /* ------------------------------------------------------------------------------------------------
+     |  Other Functions
+     | ------------------------------------------------------------------------------------------------
+     */
+    private function registerEvents($events, $times = 1)
     {
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.add', m::type('array'));
-        $this->events->shouldReceive('fire')->once()->with(Cartify::EVENT_KEY . '.added', m::type('array'));
-
-        $this->cartify->add('293ad', 'Product 1', 1, 9.99);
-
-        $this->assertInstanceOf(
-            'Arcanedev\Cartify\Entities\ProductOptions',
-            $this->cartify->content()->first()->options
-        );
+        foreach ($events as $event => $type) {
+            $this->events
+                ->shouldReceive('fire')
+                ->times($times)
+                ->with(Cartify::EVENT_KEY . '.'. $event, $type);
+        }
     }
 }
