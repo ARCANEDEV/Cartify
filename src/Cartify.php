@@ -8,18 +8,21 @@ use Arcanedev\Cartify\Entities\CartCollection;
 use Arcanedev\Cartify\Entities\Product;
 use Arcanedev\Cartify\Entities\ProductCollection;
 use Arcanedev\Cartify\Exceptions\CartNotFoundException;
+use Arcanedev\Cartify\Exceptions\InvalidCartInstanceException;
 use Arcanedev\Cartify\Exceptions\InvalidPriceException;
 use Arcanedev\Cartify\Exceptions\InvalidProductException;
 use Arcanedev\Cartify\Exceptions\InvalidProductIDException;
 use Arcanedev\Cartify\Exceptions\InvalidQuantityException;
+use Countable;
 
-class Cartify implements CartifyInterface
+class Cartify implements CartifyInterface, Countable
 {
     /* ------------------------------------------------------------------------------------------------
      |  Constants
      | ------------------------------------------------------------------------------------------------
      */
     const BASE_INSTANCE = 'cartify';
+    const EVENT_KEY     = 'cartify';
 
     /* ------------------------------------------------------------------------------------------------
      |  Properties
@@ -92,14 +95,14 @@ class Cartify implements CartifyInterface
      *
      * @param  string $instance Cart instance name
      *
-     * @throws CartNotFoundException
+     * @throws InvalidCartInstanceException
      *
      * @return self
      */
     public function instance($instance = null)
     {
         if (empty($instance) ) {
-            throw new CartNotFoundException;
+            throw new InvalidCartInstanceException;
         }
 
         $this->instance = $instance;
@@ -134,16 +137,14 @@ class Cartify implements CartifyInterface
             $options = array_get($id, 'options', []);
 
             $this->fireEvent('add', array_merge($id, compact('options')));
-            $result = $this->addRow($id['id'], $id['name'], $id['qty'], $id['price'], $options);
+            $result = $this->addProduct($id['id'], $id['name'], $id['qty'], $id['price'], $options);
             $this->fireEvent('added', array_merge($id, compact('options')));
 
             return $this;
         }
 
-        $data = compact('id', 'name', 'qty', 'price', 'options');
-
-        $this->fireEvent('add', $data);
-        $result = $this->addRow($id, $name, $qty, $price, $options);
+        $this->fireEvent('add', $data = compact('id', 'name', 'qty', 'price', 'options'));
+        $this->addProduct($id, $name, $qty, $price, $options);
         $this->fireEvent('added', $data);
 
         return $this;
@@ -162,7 +163,7 @@ class Cartify implements CartifyInterface
     {
         $this->fireEvent('batch', $items);
         foreach ($items as $item) {
-            $this->addRow(
+            $this->addProduct(
                 $item['id'],
                 $item['name'],
                 $item['qty'],
@@ -188,20 +189,8 @@ class Cartify implements CartifyInterface
      *
      * @return self
      */
-    private function addRow($id, $name, $qty, $price, array $options = [])
+    private function addProduct($id, $name, $qty, $price, array $options = [])
     {
-        if (empty($id) || empty($name) || empty($qty) || ! isset($price)) {
-            throw new InvalidProductException;
-        }
-
-        if ( ! is_numeric($qty)) {
-            throw new InvalidQuantityException;
-        }
-
-        if ( ! is_numeric($price)) {
-            throw new InvalidPriceException;
-        }
-
         $cart     = $this->getContent();
         $hashedId = hash_id($id, $options);
 
@@ -210,7 +199,8 @@ class Cartify implements CartifyInterface
             $cart    = $this->updateRow($hashedId, ['qty' => $product->qty + $qty]);
         }
         else {
-            $cart = $this->createRow($hashedId, $id, $name, $qty, $price, $options);
+            $cart = $this->getContent();
+            $cart->addProduct(compact('id', 'name', 'qty', 'price', 'options'));
         }
 
         $this->updateCart($cart);
@@ -258,9 +248,9 @@ class Cartify implements CartifyInterface
 
         $cart = $this->getContent();
 
-        $this->fireEvent('remove', $hashedId);
-        $cart->removeProduct($hashedId);
-        $this->fireEvent('removed', $hashedId);
+        $this->fireEvent('delete', $hashedId);
+        $cart->delete($hashedId);
+        $this->fireEvent('deleted', $hashedId);
 
         $this->updateCart($cart);
 
@@ -327,7 +317,7 @@ class Cartify implements CartifyInterface
         // TODO: Replace by sum method
         foreach($products as $product) {
             /** @var Product $product */
-            $total += $product->subtotal;
+            $total += $product->getTotal();
         }
 
         return $total;
@@ -439,26 +429,6 @@ class Cartify implements CartifyInterface
     }
 
     /**
-     * Create a new row Object
-     *
-     * @param  string  $hashedId    The ID of the new row
-     * @param  string  $id       Unique ID of the item
-     * @param  string  $name     Name of the item
-     * @param  int     $qty      Item qty to add to the cart
-     * @param  float   $price    Price of one item
-     * @param  array   $options  Array of additional options, such as 'size' or 'color'
-     *
-     * @return CartCollection
-     */
-    protected function createRow($hashedId, $id, $name, $qty, $price, array $options)
-    {
-        $cart = $this->getContent();
-
-        $cart->addProduct(compact('hashedId', 'id', 'name', 'qty', 'price', 'options'));
-
-        return $cart;
-    }
-    /**
      * Update the quantity of a row
      *
      * @param  string  $rowId  The ID of the row
@@ -526,7 +496,7 @@ class Cartify implements CartifyInterface
      */
     private function fireEvent($name, $id = null)
     {
-        $this->event->fire('cart.' . $name, $id);
+        $this->event->fire(self::EVENT_KEY . '.' . $name, $id);
     }
 
     /**
