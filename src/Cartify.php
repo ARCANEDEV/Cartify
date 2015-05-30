@@ -123,28 +123,22 @@ class Cartify implements CartifyInterface, Countable
      */
     public function add($id, $name = null, $qty = null, $price = null, array $options = [])
     {
-        // If the first parameter is an array we need to call the add() function again
-        if (is_array($id)) {
-            // And if it's not only an array, but a multidimensional array, we need to
-            // recursively call the add function
-            if (is_multi_array($id)) {
-                $this->addMany($id);
-
-                return $this;
-            }
-
-            $options = array_get($id, 'options', []);
-
-            $this->fireEvent('add', array_merge($id, compact('options')));
-            $this->addProduct($id['id'], $id['name'], $id['qty'], $id['price'], $options);
-            $this->fireEvent('added', array_merge($id, compact('options')));
+        if ( ! is_array($id)) {
+            $this->fireEvent('add', $data = compact('id', 'name', 'qty', 'price', 'options'));
+            $this->addProduct($id, $name, $qty, $price, $options);
+            $this->fireEvent('added', $data);
 
             return $this;
         }
 
-        $this->fireEvent('add', $data = compact('id', 'name', 'qty', 'price', 'options'));
-        $this->addProduct($id, $name, $qty, $price, $options);
-        $this->fireEvent('added', $data);
+        // And if it's not only an array, but a multidimensional array, we need to
+        // recursively call the add function
+        if (is_multi_array($id)) {
+            $this->addMany($id);
+        }
+        else {
+            $this->addOne($id);
+        }
 
         return $this;
     }
@@ -171,6 +165,21 @@ class Cartify implements CartifyInterface, Countable
             );
         }
         $this->fireEvent('batched', $items);
+    }
+
+    private function addOne(array $attributes)
+    {
+        $options = array_get($attributes, 'options', []);
+
+        $this->fireEvent('add', array_merge($attributes, compact('options')));
+        $this->addProduct(
+            $attributes['id'],
+            $attributes['name'],
+            $attributes['qty'],
+            $attributes['price'],
+            $options
+        );
+        $this->fireEvent('added', array_merge($attributes, compact('options')));
     }
 
     /**
