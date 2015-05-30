@@ -190,7 +190,7 @@ class ProductTest extends TestCase
      * @test
      *
      * @expectedException        \Arcanedev\Cartify\Exceptions\InvalidProductException
-     * @expectedExceptionMessage These attributes are missing: price
+     * @expectedExceptionMessage These attributes are missing or empty: price
      */
     public function it_must_trow_invalid_product_on_missing_attributes()
     {
@@ -206,19 +206,22 @@ class ProductTest extends TestCase
         $mistakes = [
             [
                 'value'     => null,
-                'message'   => 'The product id is empty or equal to 0.'
+                'message'   => 'These attributes are missing or empty: id.'
             ],[
                 'value'     => '   ',
                 'message'   => 'The product id is empty or equal to 0.'
             ],[
                 'value'     => 0,
-                'message'   => 'The product id is empty or equal to 0.'
+                'message'   => 'These attributes are missing or empty: id.'
             ]
         ];
 
         foreach ($mistakes as $mistake) {
             try {
                 $this->createModifiedProduct('id', $mistake['value']);
+            }
+            catch(InvalidProductException $e) {
+                $this->assertEquals($mistake['message'], $e->getMessage());
             }
             catch(InvalidProductIDException $e) {
                 $this->assertEquals($mistake['message'], $e->getMessage());
@@ -232,7 +235,7 @@ class ProductTest extends TestCase
         $mistakes = [
             [
                 'value'     => null,
-                'message'   => 'The product name is empty.'
+                'message'   => 'These attributes are missing or empty: name.'
             ],[
                 'value'     => '   ',
                 'message'   => 'The product name is empty.'
@@ -255,10 +258,10 @@ class ProductTest extends TestCase
         $mistakes = [
             [
                 'value'     => null,
-                'message'   => 'The product quantity must be a numeric value.'
+                'message'   => 'These attributes are missing or empty: qty.'
             ],[
                 'value'     => 0,
-                'message'   => 'The product quantity must be an integer and greater than 0.'
+                'message'   => 'These attributes are missing or empty: qty.'
             ]
         ];
 
@@ -267,10 +270,15 @@ class ProductTest extends TestCase
             try {
                 $this->createModifiedProduct('qty', $mistake['value']);
             }
+            catch(InvalidProductException $e) {
+                $thrown = true;
+                $this->assertEquals($mistake['message'], $e->getMessage());
+            }
             catch(InvalidQuantityException $e) {
                 $thrown = true;
                 $this->assertEquals($mistake['message'], $e->getMessage());
             }
+
             $this->assertTrue($thrown, 'Fail to throw an InvalidQuantityException.');
         }
     }
@@ -281,10 +289,16 @@ class ProductTest extends TestCase
         $mistakes = [
             [
                 'value'     => null,
-                'message'   => 'The product price must be a numeric|double value.'
+                'message'   => 'These attributes are missing or empty: price.'
             ],[
                 'value'     => 0,
-                'message'   => 'The product price must be greater than 0.'
+                'message'   => 'These attributes are missing or empty: price.',
+            ],[
+                'value'     => -1,
+                'message'   => 'The product price must be greater than 0.',
+            ],[
+                'value'     => 'Hello',
+                'message'   => 'The product price must be a numeric|double value.',
             ]
         ];
 
@@ -292,6 +306,10 @@ class ProductTest extends TestCase
             $thrown = false;
             try {
                 $this->createModifiedProduct('price', $mistake['value']);
+            }
+            catch(InvalidProductException $e) {
+                $thrown = true;
+                $this->assertEquals($mistake['message'], $e->getMessage());
             }
             catch(InvalidPriceException $e) {
                 $thrown = true;

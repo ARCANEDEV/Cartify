@@ -473,12 +473,12 @@ class Product implements ProductInterface, Arrayable
      */
     private function checkRequiredAttributes(array $attributes)
     {
-        $found = array_intersect($this->required, array_keys($attributes));
+        $found = array_intersect_key($attributes, array_flip($this->required));
 
-        if (count($found) !== count($this->required)) {
-            $missing = implode(', ', array_diff($this->required, $found));
+        if (count($found = array_filter($found)) !== count($this->required)) {
+            $missing = implode(', ', array_diff($this->required, array_keys($found)));
 
-            throw new InvalidProductException("These attributes are missing: $missing.");
+            throw new InvalidProductException("These attributes are missing or empty: $missing.");
         }
     }
 
