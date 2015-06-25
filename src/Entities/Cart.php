@@ -67,6 +67,26 @@ class Cart implements CartInterface, Countable
         return $this;
     }
 
+    /**
+     * Get products total without VAT
+     *
+     * @return double
+     */
+    public function getTotal()
+    {
+        return $this->products->getTotal();
+    }
+
+    /**
+     * Get total price
+     *
+     * @return double
+     */
+    public function getTotalPrice()
+    {
+        return $this->products->getTotalPrice();
+    }
+
     /* ------------------------------------------------------------------------------------------------
      |  Main Functions
      | ------------------------------------------------------------------------------------------------
@@ -186,13 +206,15 @@ class Cart implements CartInterface, Countable
     }
 
     /**
-     * Get product count
+     * Get the number of items in the cart
+     *
+     * @param  boolean  $totalItems  Get all the items (when false, will return the number of rows)
      *
      * @return int
      */
-    public function count()
+    public function count($totalItems = false)
     {
-        return $this->products->count();
+        return $this->products->count($totalItems);
     }
 
     /**

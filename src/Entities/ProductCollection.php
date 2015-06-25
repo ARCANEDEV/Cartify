@@ -122,6 +122,48 @@ class ProductCollection extends Collection implements ProductOptionsInterface, A
     }
 
     /**
+     * Get the number of items
+     *
+     * @param  boolean  $totalItems  Get all the items (when false, will return the number of rows)
+     *
+     * @return int
+     */
+    public function count($totalItems = false)
+    {
+        if ( ! $totalItems) {
+            return parent::count();
+        }
+
+        return $this->sum(function(Product $product) {
+            return $product->getQty();
+        });
+    }
+
+    /**
+     * Get products total without VAT
+     *
+     * @return double
+     */
+    public function getTotal()
+    {
+        return $this->sum(function(Product $product) {
+            return $product->getTotal();
+        });
+    }
+
+    /**
+     * Get total price
+     *
+     * @return double
+     */
+    public function getTotalPrice()
+    {
+        return $this->sum(function(Product $product) {
+            return $product->getTotalPrice();
+        });
+    }
+
+    /**
      * Delete all products
      */
     public function clear()

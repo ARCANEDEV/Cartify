@@ -438,7 +438,7 @@ class CartifyTest extends TestCase
     }
 
     /** @test */
-    public function testCartCanGetRowCount()
+    public function it_can_can_get_product_count()
     {
         $this->registerEvents([
             'add'   => m::type('array'),
@@ -462,8 +462,8 @@ class CartifyTest extends TestCase
         $this->cartify->instance('main')->add('293ad', 'Product 1', 1, 9.99);
         $this->cartify->instance('whishlist')->add('986se', 'Product 2', 1, 19.99);
 
-        $mainCart       = $this->cartify->instance('main')->content();
-        $wishlistCart   = $this->cartify->instance('whishlist')->content();
+        $mainCart     = $this->cartify->instance('main')->content();
+        $wishlistCart = $this->cartify->instance('whishlist')->content();
 
         $this->assertTrue($mainCart->hasProduct('8cbf215baa3b757e910e5305ab981172'));
         $this->assertFalse($mainCart->hasProduct('22eae2b9c10083d6631aaa023106871a'));

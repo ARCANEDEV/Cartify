@@ -150,6 +150,23 @@ class CartTest extends TestCase
         $this->assertEquals($productData['qty'],  $product->qty);
     }
 
+    /** @test */
+    public function it_can_get_total_and_total_price()
+    {
+        $total = 0;
+        $totalPrice = 0;
+
+        for ($i = 1; $i <= 10; $i++) {
+            $product     = $this->makeRandomProduct();
+            $total      += $product->getTotal();
+            $totalPrice += $product->getTotalPrice();
+            $this->cart->add($product);
+        }
+
+        $this->assertEquals($total, $this->cart->getTotal());
+        $this->assertEquals($totalPrice, $this->cart->getTotalPrice());
+    }
+
     /**
      * @test
      *

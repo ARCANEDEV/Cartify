@@ -8,5 +8,4 @@ use Arcanedev\Cartify\Bases\Collection;
  */
 class CartCollection extends Collection
 {
-
 }

@@ -1,6 +1,5 @@
 <?php namespace Arcanedev\Cartify\Tests\Entities;
 
-use Arcanedev\Cartify\Entities\Product;
 use Arcanedev\Cartify\Entities\ProductCollection;
 use Arcanedev\Cartify\Tests\TestCase;
 
@@ -119,5 +118,23 @@ class ProductCollectionTest extends TestCase
         $product = $this->products->first();
         $this->products->deleteProduct($product->hashedId);
         $this->assertCount(0, $this->products);
+    }
+
+    /** @test */
+    public function it_can_get_product_total_and_total_price()
+    {
+        $total = 0;
+        $totalPrice = 0;
+
+        for ($i = 1; $i <= 10; $i++) {
+            $product = $this->makeRandomProduct();
+            $total += $product->getTotal();
+            $totalPrice += $product->getTotalPrice();
+
+            $this->products->add($product);
+        }
+
+        $this->assertEquals($total, $this->products->getTotal());
+        $this->assertEquals($totalPrice, $this->products->getTotalPrice());
     }
 }

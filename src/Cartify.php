@@ -415,19 +415,7 @@ class Cartify implements CartifyInterface, Countable
     {
         $cart = $this->getContent();
 
-        if ( ! $totalItems) {
-            return $cart->count();
-        }
-
-        $count = 0;
-
-        // TODO: replace by sum method
-        foreach($cart->all() as $product) {
-            /** @var Product $product */
-            $count += $product->qty;
-        }
-
-        return $count;
+        return $cart->count($totalItems);
     }
 
     /* ------------------------------------------------------------------------------------------------
