@@ -15,6 +15,7 @@
     },
     "require-dev": {
         "orchestra/testbench": "~2.2",
+        "phpunit/phpunit": "~4.7",
         "phpunit/phpcov": "~2.0",
         "mockery/mockery": "~0.9",
         "fzaninotto/faker": "~1.4",
