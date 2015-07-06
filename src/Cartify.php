@@ -123,17 +123,16 @@ class Cartify implements CartifyInterface, Countable
      */
     public function add($id, $name = null, $qty = null, $price = null, array $options = [])
     {
-        if ( ! is_array($id)) {
+        if (is_array($id)) {
+            // And if it's not only an array, but a multidimensional array, we need to
+            // recursively call the add function
+            is_multi_array($id) ? $this->addMany($id) : $this->addOne($id);
+        }
+        else {
             $this->fireEvent('add', $data = compact('id', 'name', 'qty', 'price', 'options'));
             $this->addProduct($id, $name, $qty, $price, $options);
             $this->fireEvent('added', $data);
-
-            return $this;
         }
-
-        // And if it's not only an array, but a multidimensional array, we need to
-        // recursively call the add function
-        is_multi_array($id) ? $this->addMany($id) : $this->addOne($id);
 
         return $this;
     }
@@ -150,6 +149,7 @@ class Cartify implements CartifyInterface, Countable
     private function addMany(array $items)
     {
         $this->fireEvent('batch', $items);
+
         foreach ($items as $item) {
             $this->addProduct(
                 $item['id'],
@@ -159,6 +159,7 @@ class Cartify implements CartifyInterface, Countable
                 array_get($item, 'options', [])
             );
         }
+
         $this->fireEvent('batched', $items);
     }
 
@@ -207,7 +208,6 @@ class Cartify implements CartifyInterface, Countable
             $cart    = $this->updateProduct($hashedId, ['qty' => $product->qty + $qty]);
         }
         else {
-            $cart = $this->getContent();
             $cart->addProduct(compact('id', 'name', 'qty', 'price', 'options'));
         }
 
@@ -387,9 +387,7 @@ class Cartify implements CartifyInterface, Countable
      */
     public function total()
     {
-        $products = $this->getContent()->all();
-
-        return $products->getTotal();
+        return $this->getContent()->getTotal();
     }
 
     /**
@@ -401,9 +399,7 @@ class Cartify implements CartifyInterface, Countable
      */
     public function count($totalItems = true)
     {
-        $cart = $this->getContent();
-
-        return $cart->count($totalItems);
+        return $this->getContent()->count($totalItems);
     }
 
     /* ------------------------------------------------------------------------------------------------
