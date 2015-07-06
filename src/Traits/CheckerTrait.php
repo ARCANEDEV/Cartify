@@ -15,7 +15,10 @@ trait CheckerTrait
      */
     private function isValidString($value)
     {
-        return ! ($this->checkIsNullOrEmpty($value) || $this->checkIsEmptyString($value));
+        return ! (
+            $this->checkIsNullOrEmpty($value) ||
+            $this->checkIsEmptyString($value)
+        );
     }
 
     /* ------------------------------------------------------------------------------------------------

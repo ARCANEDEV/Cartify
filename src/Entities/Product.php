@@ -113,7 +113,9 @@ class Product implements ProductInterface, Arrayable
     public function __construct(array $attributes = [])
     {
         if (empty($attributes)) {
-            throw new InvalidProductException('The product attributes is empty');
+            throw new InvalidProductException(
+                'The product attributes is empty'
+            );
         }
 
         $this->propOptions = new ProductOptions;
@@ -210,6 +212,7 @@ class Product implements ProductInterface, Arrayable
 
     /**
      * Get Hashed ID
+     *
      * @return string
      */
     public function getHashedId()
@@ -284,7 +287,7 @@ class Product implements ProductInterface, Arrayable
      *
      * @param  int $qty
      *
-     * @return $this
+     * @return self
      */
     public function setQty($qty)
     {
@@ -431,12 +434,12 @@ class Product implements ProductInterface, Arrayable
     public function update(array $attributes)
     {
         foreach($attributes as $key => $value) {
-            if ($key == 'options') {
+            if ($key === 'options') {
                 $options = $this->options->merge($value);
                 $this->setOptions($options->toArray());
             }
             else {
-                $this->__set($key, $value);
+                $this->{$key} = $value;
             }
         }
 
@@ -478,7 +481,9 @@ class Product implements ProductInterface, Arrayable
         if (count($found = array_filter($found)) !== count($this->required)) {
             $missing = implode(', ', array_diff($this->required, array_keys($found)));
 
-            throw new InvalidProductException("These attributes are missing or empty: $missing.");
+            throw new InvalidProductException(
+                "These attributes are missing or empty: $missing."
+            );
         }
     }
 
@@ -492,7 +497,9 @@ class Product implements ProductInterface, Arrayable
     private function checkId($id)
     {
         if ( ! $this->isValidString($id)) {
-            throw new InvalidProductIDException('The product id is empty or equal to 0.');
+            throw new InvalidProductIDException(
+                'The product id is empty or equal to 0.'
+            );
         }
     }
 
@@ -506,7 +513,9 @@ class Product implements ProductInterface, Arrayable
     private function checkName($name)
     {
         if ( ! $this->isValidString($name)) {
-            throw new InvalidProductException('The product name is empty.');
+            throw new InvalidProductException(
+                'The product name is empty.'
+            );
         }
     }
 
@@ -619,6 +628,7 @@ class Product implements ProductInterface, Arrayable
      * Fill optional attributes
      *
      * @param array $attributes
+     * @param array $defaults
      */
     private function fillOptionalAttributes(array &$attributes, $defaults = [])
     {
