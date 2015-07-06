@@ -204,7 +204,7 @@ class Cartify implements CartifyInterface, Countable
 
         if ($cart->hasProduct($hashedId)) {
             $product = $cart->get($hashedId);
-            $cart    = $this->updateRow($hashedId, ['qty' => $product->qty + $qty]);
+            $cart    = $this->updateProduct($hashedId, ['qty' => $product->qty + $qty]);
         }
         else {
             $cart = $this->getContent();
@@ -329,14 +329,14 @@ class Cartify implements CartifyInterface, Countable
     }
 
     /**
-     * Update a row if the rowId already exists
+     * Update a product if the hashedId already exists
      *
-     * @param  string $hashedId   The ID of the row to update
+     * @param  string $hashedId   The ID of the product to update
      * @param  array  $attributes The quantity to add to the row
      *
      * @return Cart
      */
-    protected function updateRow($hashedId, $attributes)
+    protected function updateProduct($hashedId, $attributes)
     {
         $cart    = $this->getContent();
         $product = $cart->get($hashedId);
@@ -349,31 +349,31 @@ class Cartify implements CartifyInterface, Countable
     /**
      * Update the quantity of a row
      *
-     * @param  string  $rowId  The ID of the row
-     * @param  int     $qty    The qty to add
+     * @param  string  $hashedId  The ID of the product
+     * @param  int     $qty       The qty to add
      *
      * @return Cart
      */
-    protected function updateQty($rowId, $qty)
+    protected function updateQty($hashedId, $qty)
     {
         if ($qty <= 0) {
-            return $this->remove($rowId);
+            return $this->remove($hashedId);
         }
 
-        return $this->updateRow($rowId, ['qty' => $qty]);
+        return $this->updateProduct($hashedId, ['qty' => $qty]);
     }
 
     /**
      * Update an attribute of the row
      *
-     * @param  string  $rowId       The ID of the row
+     * @param  string  $hashedId    The ID of the row
      * @param  array   $attributes  An array of attributes to update
      *
      * @return Cart
      */
-    protected function updateAttribute($rowId, $attributes)
+    protected function updateAttribute($hashedId, $attributes)
     {
-        return $this->updateRow($rowId, $attributes);
+        return $this->updateProduct($hashedId, $attributes);
     }
 
     /* ------------------------------------------------------------------------------------------------
@@ -383,25 +383,13 @@ class Cartify implements CartifyInterface, Countable
     /**
      * Get the price total
      *
-     * @return float
+     * @return double
      */
     public function total()
     {
         $products = $this->getContent()->all();
 
-        if ($products->isEmpty()) {
-            return 0;
-        }
-
-        $total = 0;
-
-        // TODO: Replace by sum method
-        foreach($products as $product) {
-            /** @var Product $product */
-            $total += $product->getTotal();
-        }
-
-        return $total;
+        return $products->getTotal();
     }
 
     /**
@@ -453,6 +441,8 @@ class Cartify implements CartifyInterface, Countable
      | ------------------------------------------------------------------------------------------------
      */
     /**
+     * Fire an event
+     *
      * @param string $name
      * @param null   $id
      */

@@ -146,6 +146,10 @@ class ProductCollection extends Collection implements ProductOptionsInterface, A
      */
     public function getTotal()
     {
+        if ($this->isEmpty()) {
+            return 0;
+        }
+
         return $this->sum(function(Product $product) {
             return $product->getTotal();
         });
